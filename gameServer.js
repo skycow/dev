@@ -5,6 +5,8 @@ let sqlite = require('sqlite3');
 let fs = require('fs');
 let path=require('path');
 var bodyParser = require('body-parser');
+let connections = 0;
+let TARGET_USERS_NUM = 10;
 
 let app = express();
 let http = require('http').Server(app);
@@ -73,8 +75,17 @@ app.use('*', function(request, response){
   response.status(404).send("Not found");
 })
 
+function runCountdown() {
+    console.log("Not sure what to do next")
+}
+
 io.on('connection', function(socket){
   console.log('a user connected');
+  connections++;
+  socket.on('chat message', function(msg){
+      io.emit('chat message', msg);
+  });
+  if (connections >= TARGET_USERS_NUM) runCountdown();
 });
 
 http.listen(3000, function() {

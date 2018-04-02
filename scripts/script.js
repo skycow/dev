@@ -1,5 +1,7 @@
 document.getElementById('id-signup').hidden = true;
 document.getElementById('id-join').hidden = true;
+document.getElementById('id-chat').hidden = true;
+let socket;
 
 document.getElementById('button-signin').addEventListener('click',function(){
     let req = new XMLHttpRequest();
@@ -72,6 +74,22 @@ document.getElementById('id-newpassword').addEventListener('keydown', passMatch)
 document.getElementById('id-newpassword2').addEventListener('keyup', passMatch)
 
 document.getElementById('button-join').addEventListener('click', function(){
-  let socket = io();
+    document.getElementById('id-chat').hidden = false;
+    document.getElementById('id-join').hidden = true;
+    socket = io();
+    socket.on('chat message', function(msg){
+        var node = document.createElement("li");
+        var br = document.createElement("br");
+        var textnode = document.createTextNode(msg);
+        node.appendChild(textnode);
+        node.appendChild(br);
+        node.className = "list-group-item justify-content-between align-items-center";
+        document.getElementById("messages").appendChild(node);
+        document.getElementById("chat-bar").scrollTop = document.getElementById("chat-bar").scrollHeight;
+    });
 });
 
+document.getElementById('button-chat').addEventListener('click', function(){
+  socket.emit('chat message', document.getElementById('input-send').value);
+  document.getElementById('input-send').value = "";
+});
