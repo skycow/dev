@@ -5,7 +5,12 @@ let sqlite = require('sqlite3');
 let fs = require('fs');
 let path=require('path');
 var bodyParser = require('body-parser');
+let connections = 0;
+let TARGET_USERS_NUM = 10;
 
+let app = express();
+let http = require('http').Server(app);
+var io = require('socket.io')(http);
 
 let mimeTypes = {
   '.js' : 'text/javascript',
@@ -18,18 +23,18 @@ let mimeTypes = {
 
 //sql
 let db = new sqlite.Database('users.db');
- 
+
 db.serialize(function() {
   db.run("CREATE TABLE IF NOT EXISTS users (user TEXT PRIMARY KEY, pass TEXT)");
 });
 
-let app = express();
 
 app.use(bodyParser.urlencoded({ extended: true })); 
 app.use(bodyParser.json()); 
 
 app.use('/css',express.static(path.join(__dirname,'css')));
 app.use('/scripts',express.static(path.join(__dirname,'scripts')));
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
 app.get('/', function(request, response){
 
@@ -71,6 +76,32 @@ app.use('*', function(request, response){
   response.status(404).send("Not found");
 })
 
-app.listen(3000, function() {
+function runCountdown() {
+    console.log("Not sure what to do next")
+}
+
+let activeUsers = [];
+
+io.on('connection', function(socket){
+  socket.on('join', function(data){
+    console.log(data.name + ' with id ' + socket.id + ' connected');
+    activeUsers.push({
+      username: data.name,
+      socketId: socket.id
+    });
+    connections++;    
+    if (connections >= TARGET_USERS_NUM) runCountdown();
+
+    socket.on('chat message', function(msg){
+      io.emit('chat message', data.name + ": " + msg);
+    });
+
+    socket.on('disconnect', function(){
+      console.log(data.name + ' with id ' + socket.id + ' disconnected');
+    });
+  });
+});
+
+http.listen(3000, function() {
   console.log('Server running at http://localhost:3000/');
 });
