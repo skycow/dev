@@ -1,6 +1,9 @@
+let userId = '';
+
 document.getElementById('id-signup').hidden = true;
 document.getElementById('id-join').hidden = true;
 document.getElementById('id-chat').hidden = true;
+document.getElementById('id-game').hidden = true;
 let socket;
 
 document.getElementById('button-signin').addEventListener('click',function(){
@@ -17,6 +20,9 @@ document.getElementById('button-signin').addEventListener('click',function(){
         document.getElementById('id-join').hidden = false;
         document.getElementById('id-welcome').hidden = true;
         document.getElementById('id-signup').hidden = true;
+
+        userId = document.getElementById("id-username").value;
+
       } else {
         document.getElementById('id-signinerror').innerHTML = "Unknown Error";
       }
@@ -39,6 +45,9 @@ document.getElementById('button-signup').addEventListener('click',function(){
       document.getElementById('id-join').hidden = false;
       document.getElementById('id-welcome').hidden = true;
       document.getElementById('id-signup').hidden = true;
+
+      userId = document.getElementById("id-newusername").value;
+
     } else {
       document.getElementById('id-signinerror').innerHTML = "Unknown Error";
     }
@@ -75,8 +84,12 @@ document.getElementById('id-newpassword2').addEventListener('keyup', passMatch)
 
 document.getElementById('button-join').addEventListener('click', function(){
     document.getElementById('id-chat').hidden = false;
+    // document.getElementById('id-game').hidden = false;  
     document.getElementById('id-join').hidden = true;
     socket = io();
+    socket.on('connect', function(){
+      socket.emit('join', {name: userId});
+    });
     socket.on('chat message', function(msg){
         var node = document.createElement("li");
         var br = document.createElement("br");
@@ -86,7 +99,7 @@ document.getElementById('button-join').addEventListener('click', function(){
         node.className = "list-group-item justify-content-between align-items-center";
         document.getElementById("messages").appendChild(node);
         document.getElementById("chat-bar").scrollTop = document.getElementById("chat-bar").scrollHeight;
-    });
+    });  
 });
 
 document.getElementById('button-chat').addEventListener('click', function(){

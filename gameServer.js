@@ -34,6 +34,7 @@ app.use(bodyParser.json());
 
 app.use('/css',express.static(path.join(__dirname,'css')));
 app.use('/scripts',express.static(path.join(__dirname,'scripts')));
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
 app.get('/', function(request, response){
 
@@ -79,13 +80,26 @@ function runCountdown() {
     console.log("Not sure what to do next")
 }
 
+let activeUsers = [];
+
 io.on('connection', function(socket){
-  console.log('a user connected');
-  connections++;
-  socket.on('chat message', function(msg){
-      io.emit('chat message', msg);
+  socket.on('join', function(data){
+    console.log(data.name + ' with id ' + socket.id + ' connected');
+    activeUsers.push({
+      username: data.name,
+      socketId: socket.id
+    });
+    connections++;    
+    if (connections >= TARGET_USERS_NUM) runCountdown();
+
+    socket.on('chat message', function(msg){
+      io.emit('chat message', data.name + ": " + msg);
+    });
+
+    socket.on('disconnect', function(){
+      console.log(data.name + ' with id ' + socket.id + ' disconnected');
+    });
   });
-  if (connections >= TARGET_USERS_NUM) runCountdown();
 });
 
 http.listen(3000, function() {
