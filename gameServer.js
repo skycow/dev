@@ -6,7 +6,7 @@ let fs = require('fs');
 let path=require('path');
 var bodyParser = require('body-parser');
 let connections = 0;
-let TARGET_USERS_NUM = 10;
+let TARGET_USERS_NUM = 2;
 
 let app = express();
 let http = require('http').Server(app);
@@ -77,7 +77,7 @@ app.use('*', function(request, response){
 })
 
 function runCountdown() {
-    console.log("Not sure what to do next")
+    io.emit('start game', "players reached");
 }
 
 let activeUsers = [];
@@ -97,7 +97,8 @@ io.on('connection', function(socket){
     });
 
     socket.on('disconnect', function(){
-      console.log(data.name + ' with id ' + socket.id + ' disconnected');
+        connections--;
+        console.log(data.name + ' with id ' + socket.id + ' disconnected');
     });
   });
 });
