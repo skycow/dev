@@ -6,7 +6,7 @@ let fs = require('fs');
 let path=require('path');
 var bodyParser = require('body-parser');
 let connections = 0;
-let TARGET_USERS_NUM = 2;
+let TARGET_USERS_NUM = 3;
 
 let app = express();
 let http = require('http').Server(app);
@@ -109,24 +109,31 @@ let activeUsers = [];
 io.on('connection', function(socket){
   socket.on('join', function(data){
     console.log(data.name + ' with id ' + socket.id + ' connected');
-    activeUsers.push({
-      username: data.name,
-      socketId: socket.id
-    });
-    connections++;    
+    io.emit('chat message', data.name + ' has joined the game');
+    activeUsers[socket.id] = data.name;
+    connections++;
     if (connections >= TARGET_USERS_NUM) runCountdown();
 
     socket.on('chat message', function(msg){
       io.emit('chat message', data.name + ": " + msg);
     });
 
+    socket.on('input', (keyInput) => {
+      console.log(activeUsers[socket.id] + ": " + keyInput);
+    });
+
     socket.on('disconnect', function(){
         connections--;
         console.log(data.name + ' with id ' + socket.id + ' disconnected');
+        io.emit('chat message', data.name + ' has left the game');
     });
   });
 });
 
-http.listen(process.env.PORT, function() {
-  console.log('Server running at ' + process.env.IP + ':' + process.env.PORT);
+http.listen(3000, function() {
+  console.log('Server running at http://localhost:3000/');
 });
+
+// http.listen(process.env.PORT, function() {
+//   console.log('Server running at ' + process.env.IP + ':' + process.env.PORT);
+// });
