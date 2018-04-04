@@ -83,8 +83,7 @@ document.getElementById('id-newpassword').addEventListener('keydown', passMatch)
 document.getElementById('id-newpassword2').addEventListener('keyup', passMatch)
 
 document.getElementById('button-join').addEventListener('click', function(){
-    document.getElementById('id-chat').hidden = false;
-    // document.getElementById('id-game').hidden = false;  
+    document.getElementById('id-chat').hidden = false;  
     document.getElementById('id-join').hidden = true;
     socket = io();
     socket.on('connect', function(){
@@ -100,6 +99,19 @@ document.getElementById('button-join').addEventListener('click', function(){
         document.getElementById("messages").appendChild(node);
         document.getElementById("chat-bar").scrollTop = document.getElementById("chat-bar").scrollHeight;
     });  
+    socket.on('start game', () => {
+      document.getElementById('id-game').hidden = false;
+      document.getElementById('id-chat').hidden = true; 
+      document.getElementById('h1-id-username').innerHTML = userId;
+      window.addEventListener('keydown', function(event) {
+		
+		  socket.emit('input', event.keyCode);
+	    });
+    });
+    socket.on('countdown', (value) => {
+      
+    });
+    
 });
 
 document.getElementById('button-chat').addEventListener('click', function(){

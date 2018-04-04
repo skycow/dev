@@ -6,7 +6,7 @@ let fs = require('fs');
 let path=require('path');
 var bodyParser = require('body-parser');
 let connections = 0;
-let TARGET_USERS_NUM = 10;
+let TARGET_USERS_NUM = 2;
 
 let app = express();
 let http = require('http').Server(app);
@@ -38,7 +38,7 @@ app.use('/images', express.static(path.join(__dirname, 'images')));
 
 app.get('/', function(request, response){
 
-  response.sendfile(path.join(__dirname, 'page.html'));
+  response.sendFile(path.join(__dirname, 'page.html'));
 
 });
 
@@ -76,8 +76,16 @@ app.use('*', function(request, response){
   response.status(404).send("Not found");
 })
 
-function runCountdown() {
-    console.log("Not sure what to do next")
+function runCountdown(socket) {
+  let countdown = 5;
+  let intId = setInterval(() => { 
+    io.emit('chat message', 'Game starting in ' + countdown);
+    if(!countdown){
+      clearInterval(intId);
+      io.emit('start game');
+    }
+    countdown--;
+  }, 1000);
 }
 
 let activeUsers = [];
@@ -85,23 +93,32 @@ let activeUsers = [];
 io.on('connection', function(socket){
   socket.on('join', function(data){
     console.log(data.name + ' with id ' + socket.id + ' connected');
-    activeUsers.push({
-      username: data.name,
-      socketId: socket.id
-    });
+    io.emit('chat message', data.name + ' has joined the game');
+    // activeUsers.push({
+    //   username: data.name,
+    //   socketId: socket.id
+    // });
+    activeUsers[socket.id] = data.name;
+    console.log(activeUsers.length);
     connections++;    
-    if (connections >= TARGET_USERS_NUM) runCountdown();
+    if (connections >= TARGET_USERS_NUM) runCountdown(socket);
 
     socket.on('chat message', function(msg){
       io.emit('chat message', data.name + ": " + msg);
     });
+    
+    socket.on('input', (keyInput) => {
+      console.log(activeUsers[socket.id] + ": " + keyInput);
+    });
 
     socket.on('disconnect', function(){
       console.log(data.name + ' with id ' + socket.id + ' disconnected');
+      io.emit('chat message', data.name + ' has left the game');
+      connections--;    
     });
   });
 });
 
-http.listen(3000, function() {
-  console.log('Server running at http://localhost:3000/');
+http.listen(process.env.PORT/*3000*/, function() {
+  console.log('Server running at ' + process.env.IP +':'+ process.env.PORT + '/');
 });
