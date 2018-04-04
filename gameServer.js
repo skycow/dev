@@ -27,6 +27,9 @@ let db = new sqlite.Database('users.db');
 db.serialize(function() {
   db.run("CREATE TABLE IF NOT EXISTS users (user TEXT PRIMARY KEY, pass TEXT)");
 });
+db.serialize(function() {
+  db.run("CREATE TABLE IF NOT EXISTS highscores (score INT, user TEXT)");
+});
 
 
 app.use(bodyParser.urlencoded({ extended: true })); 
@@ -71,6 +74,27 @@ app.post('/signup', function(request, response) {
   })
 });
 
+app.get('/highscores/add/:score/:user', function(request, response) {
+
+  db.run('INSERT INTO highscores(score,user) VALUES (?,?)', [request.params['score'], request.params['user']],function(err, row){
+    if(err){
+      response.json({error:err});
+    }else {
+      response.json({'inserted':true});
+    }
+  })
+});
+
+app.get('/highscores', function(request, response){
+  db.all('SELECT * FROM highscores ORDER BY score DESC', (err, rows) => {
+    if(err){
+      response.json({error:err});
+    } else {
+      response.json(rows);
+    }
+  });
+});
+
 app.use('*', function(request, response){
   //response.sendfile(path.join(__dirname, 'page.html'));
   response.status(404).send("Not found");
@@ -103,6 +127,6 @@ io.on('connection', function(socket){
   });
 });
 
-http.listen(3000, function() {
-  console.log('Server running at http://localhost:3000/');
+http.listen(process.env.PORT, function() {
+  console.log('Server running at ' + process.env.IP + ':' + process.env.PORT);
 });
