@@ -5,6 +5,8 @@ document.getElementById('id-join').hidden = true;
 document.getElementById('id-chat').hidden = true;
 document.getElementById('id-game').hidden = true;
 document.getElementById('min-players').hidden = true;
+document.getElementById('id-highscores').hidden = true;
+document.getElementById('id-options').hidden = true;
 let socket;
 
 document.getElementById('button-signin').addEventListener('click',function(){
@@ -99,6 +101,10 @@ function countdown() {
             clearInterval(refresh);
             document.getElementById('id-game').hidden = false;
             document.getElementById('id-chat').hidden = true;
+            document.getElementById('h1-id-username').innerHTML = userId;
+            window.addEventListener('keydown', function(event) {
+              socket.emit('input', event.keyCode);
+            });
         }
 
         // format countdown string + set tag value

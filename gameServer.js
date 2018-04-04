@@ -6,7 +6,7 @@ let fs = require('fs');
 let path=require('path');
 var bodyParser = require('body-parser');
 let connections = 0;
-let TARGET_USERS_NUM = 2;
+let TARGET_USERS_NUM = 3;
 
 let app = express();
 let http = require('http').Server(app);
@@ -26,6 +26,9 @@ let db = new sqlite.Database('users.db');
 
 db.serialize(function() {
   db.run("CREATE TABLE IF NOT EXISTS users (user TEXT PRIMARY KEY, pass TEXT)");
+});
+db.serialize(function() {
+  db.run("CREATE TABLE IF NOT EXISTS highscores (score INT, user TEXT)");
 });
 
 
@@ -71,6 +74,27 @@ app.post('/signup', function(request, response) {
   })
 });
 
+app.get('/highscores/add/:score/:user', function(request, response) {
+
+  db.run('INSERT INTO highscores(score,user) VALUES (?,?)', [request.params['score'], request.params['user']],function(err, row){
+    if(err){
+      response.json({error:err});
+    }else {
+      response.json({'inserted':true});
+    }
+  })
+});
+
+app.get('/highscores', function(request, response){
+  db.all('SELECT * FROM highscores ORDER BY score DESC', (err, rows) => {
+    if(err){
+      response.json({error:err});
+    } else {
+      response.json(rows);
+    }
+  });
+});
+
 app.use('*', function(request, response){
   //response.sendfile(path.join(__dirname, 'page.html'));
   response.status(404).send("Not found");
@@ -85,10 +109,8 @@ let activeUsers = [];
 io.on('connection', function(socket){
   socket.on('join', function(data){
     console.log(data.name + ' with id ' + socket.id + ' connected');
-    activeUsers.push({
-      username: data.name,
-      socketId: socket.id
-    });
+    io.emit('chat message',data.name + ' has joined the game');
+    activeUsers[socket.id] = data.name;
     connections++;    
     if (connections >= TARGET_USERS_NUM) runCountdown();
 
@@ -96,9 +118,14 @@ io.on('connection', function(socket){
       io.emit('chat message', data.name + ": " + msg);
     });
 
+    socket.on('input', (keyInput) => {
+      console.log(activeUsers[socket.id] + ': ' + keyInput);
+    });
+
     socket.on('disconnect', function(){
         connections--;
         console.log(data.name + ' with id ' + socket.id + ' disconnected');
+        io.emit('chat message', data.name + ' has left the game');
     });
   });
 });
