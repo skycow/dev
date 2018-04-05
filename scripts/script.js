@@ -143,6 +143,13 @@ document.getElementById('button-chat').addEventListener('click', function(){
   document.getElementById('input-send').value = "";
 });
 
+document.getElementById('input-send').addEventListener('keyup', function(event) {
+    event.preventDefault();
+    if (event.keyCode === 13) { //13 = enter
+        document.getElementById('button-chat').click();
+    }
+});
+
 document.getElementById('button-highscores').addEventListener('click',function(){
   document.getElementById('id-highscores').hidden = false;
   document.getElementById('id-join').hidden = true;

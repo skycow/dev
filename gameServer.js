@@ -7,6 +7,7 @@ let path=require('path');
 var bodyParser = require('body-parser');
 let connections = 0;
 let TARGET_USERS_NUM = 3;
+let game_started = false;
 
 let app = express();
 let http = require('http').Server(app);
@@ -101,7 +102,8 @@ app.use('*', function(request, response){
 })
 
 function runCountdown() {
-    io.emit('start game', "players reached");
+  if (!game_started) io.emit('start game', "players reached");
+  game_started = true;
 }
 
 let activeUsers = [];
