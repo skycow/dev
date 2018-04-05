@@ -32,8 +32,8 @@ db.serialize(function() {
 });
 
 
-app.use(bodyParser.urlencoded({ extended: true })); 
-app.use(bodyParser.json()); 
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 app.use('/css',express.static(path.join(__dirname,'css')));
 app.use('/scripts',express.static(path.join(__dirname,'scripts')));
@@ -54,7 +54,7 @@ app.post('/signin', function(request, response) {
     } else if(row.pass === request.body['password']){
       response.json({error:null,authenticated:true});
     }else{
-      response.json({error:'Invalid Password'});      
+      response.json({error:'Invalid Password'});
     }
   })
 });
@@ -111,7 +111,7 @@ io.on('connection', function(socket){
     console.log(data.name + ' with id ' + socket.id + ' connected');
     io.emit('chat message',data.name + ' has joined the game');
     activeUsers[socket.id] = data.name;
-    connections++;    
+    connections++;
     if (connections >= TARGET_USERS_NUM) runCountdown();
 
     socket.on('chat message', function(msg){
@@ -130,6 +130,9 @@ io.on('connection', function(socket){
   });
 });
 
-http.listen(3000, function() {
+http.listen(
+  process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080,
+  process.env.IP   || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0',
+  function() {
   console.log('Server running at http://localhost:3000/');
 });
