@@ -32,8 +32,8 @@ db.serialize(function() {
 });
 
 
-app.use(bodyParser.urlencoded({ extended: true })); 
-app.use(bodyParser.json()); 
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 app.use('/css',express.static(path.join(__dirname,'css')));
 app.use('/scripts',express.static(path.join(__dirname,'scripts')));
@@ -54,7 +54,7 @@ app.post('/signin', function(request, response) {
     } else if(row.pass === request.body['password']){
       response.json({error:null,authenticated:true});
     }else{
-      response.json({error:'Invalid Password'});      
+      response.json({error:'Invalid Password'});
     }
   })
 });
@@ -85,6 +85,27 @@ app.get('/highscores/add/:score/:user', function(request, response) {
   })
 });
 
+app.get('/highscores/delete/:score/:user', function(request, response) {
+
+  db.run('DELETE FROM highscores WHERE score=? AND user=?',[request.params['score'],request.params['user']],function(err){
+    if(err){
+      response.json({error:err});
+    }else {
+      response.json({msg:'success'});
+    }
+  })
+});
+
+app.get('/highscores/clear', function(request, response){
+  db.all('DELETE FROM highscores', (err) => {
+    if(err){
+      response.json({error:err});
+    } else {
+      response.json({msg:'success'});
+    }
+  });
+});
+
 app.get('/highscores', function(request, response){
   db.all('SELECT * FROM highscores ORDER BY score DESC', (err, rows) => {
     if(err){
@@ -111,7 +132,7 @@ io.on('connection', function(socket){
     console.log(data.name + ' with id ' + socket.id + ' connected');
     io.emit('chat message',data.name + ' has joined the game');
     activeUsers[socket.id] = data.name;
-    connections++;    
+    connections++;
     if (connections >= TARGET_USERS_NUM) runCountdown();
 
     socket.on('chat message', function(msg){
