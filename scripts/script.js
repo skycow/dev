@@ -61,13 +61,13 @@ document.getElementById('button-signup').addEventListener('click',function(){
 document.getElementById('button-newuser').addEventListener('click',function(){
   document.getElementById('id-signup').hidden = false;
   document.getElementById('id-welcome').hidden = true;
-  
+
 });
 
 document.getElementById('button-signinret').addEventListener('click',function(){
   document.getElementById('id-welcome').hidden = false;
   document.getElementById('id-signup').hidden = true;
-  
+
 });
 
 let passMatch = function(){
@@ -124,6 +124,13 @@ document.getElementById('button-join').addEventListener('click', function(){
         if (msg === "players reached"){
             document.getElementById('min-players').hidden = false;
             countdown();
+        } else if (msg === "player reconnect") {
+          document.getElementById('id-game').hidden = false;
+          document.getElementById('id-chat').hidden = true;
+          document.getElementById('h1-id-username').innerHTML = userId;
+          window.addEventListener('keydown', function(event) {
+            socket.emit('input', event.keyCode);
+          });
         }
     });
     socket.on('chat message', function(msg){
@@ -153,7 +160,7 @@ document.getElementById('input-send').addEventListener('keyup', function(event) 
 document.getElementById('button-highscores').addEventListener('click',function(){
   document.getElementById('id-highscores').hidden = false;
   document.getElementById('id-join').hidden = true;
-  
+
   let req = new XMLHttpRequest();
   req.responseType = 'json';
   req.open("GET", "/highscores");
@@ -172,24 +179,24 @@ document.getElementById('button-highscores').addEventListener('click',function()
     }
  };
   req.send();
-  
-  
+
+
 });
 
 document.getElementById('button-high-back').addEventListener('click',function(){
   document.getElementById('id-join').hidden = false;
   document.getElementById('id-highscores').hidden = true;
-  
+
 });
 
 document.getElementById('button-options').addEventListener('click',function(){
   document.getElementById('id-options').hidden = false;
   document.getElementById('id-join').hidden = true;
-  
+
 });
 
 document.getElementById('button-options-back').addEventListener('click',function(){
   document.getElementById('id-join').hidden = false;
   document.getElementById('id-options').hidden = true;
-  
+
 });
