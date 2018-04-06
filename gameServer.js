@@ -8,6 +8,7 @@ var bodyParser = require('body-parser');
 let connections = 0;
 let TARGET_USERS_NUM = 3;
 let game_started = false;
+let activeUsers = [];
 
 let app = express();
 let http = require('http').Server(app);
@@ -33,8 +34,8 @@ db.serialize(function() {
 });
 
 
-app.use(bodyParser.urlencoded({ extended: true })); 
-app.use(bodyParser.json()); 
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 app.use('/css',express.static(path.join(__dirname,'css')));
 app.use('/scripts',express.static(path.join(__dirname,'scripts')));
@@ -42,7 +43,7 @@ app.use('/images', express.static(path.join(__dirname, 'images')));
 
 app.get('/', function(request, response){
 
-  response.sendfile(path.join(__dirname, 'page.html'));
+  response.sendFile(path.join(__dirname, 'page.html'));
 
 });
 
@@ -55,7 +56,7 @@ app.post('/signin', function(request, response) {
     } else if(row.pass === request.body['password']){
       response.json({error:null,authenticated:true});
     }else{
-      response.json({error:'Invalid Password'});      
+      response.json({error:'Invalid Password'});
     }
   })
 });
@@ -123,17 +124,24 @@ function runCountdown() {
     }, 1000);
 }
 
-let activeUsers = [];
-
 io.on('connection', function(socket){
   socket.on('join', function(data){
     console.log(data.name + ' with id ' + socket.id + ' connected');
-    io.emit('chat message',data.name + ' has joined the game');
-    activeUsers[socket.id] = data.name;
-    connections++;    
-    if (connections >= TARGET_USERS_NUM) {
+    if(game_started) {
+      if(typeof activeUsers[data.name] !== 'undefined') {
+          activeUsers[data.name] = socket.id;
+          io.sockets.sockets[socket.id].emit('start game', "player reconnect"); io.emit('chat message',data.name + ' has rejoined the game.');
+      } else {
+        io.emit('chat message', "Game already in progress.")
+      }
+    } else {
+      io.emit('chat message',data.name + ' has joined the game.');
+      activeUsers[data.name] = socket.id;
+      connections++;
+      if (connections >= TARGET_USERS_NUM) {
         if (!game_started) runCountdown();
         game_started = true;
+      }
     }
 
     socket.on('chat message', function(msg){
@@ -141,7 +149,7 @@ io.on('connection', function(socket){
     });
 
     socket.on('input', (keyInput) => {
-      console.log(activeUsers[socket.id] + ': ' + keyInput);
+      console.log(data.name + ': ' + keyInput);
     });
 
     socket.on('disconnect', function(){
