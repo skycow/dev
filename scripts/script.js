@@ -85,34 +85,6 @@ let passMatch = function(){
 document.getElementById('id-newpassword').addEventListener('keydown', passMatch)
 document.getElementById('id-newpassword2').addEventListener('keyup', passMatch)
 
-function countdown() {
-    var target_date = new Date().getTime() + (10*1000);
-    var countdown = document.getElementById('countdown');
-    var seconds;
-// update the tag with id "countdown" every 1 second
-    var refresh = setInterval(function () {
-
-        // find the amount of "seconds" between now and target
-        var current_date = new Date().getTime();
-        var seconds_left = (target_date - current_date + 1) / 1000;
-        seconds = parseInt(seconds_left % 60);
-
-        if (seconds === 0){
-            clearInterval(refresh);
-            document.getElementById('id-game').hidden = false;
-            document.getElementById('id-chat').hidden = true;
-            document.getElementById('h1-id-username').innerHTML = userId;
-            window.addEventListener('keydown', function(event) {
-              socket.emit('input', event.keyCode);
-            });
-        }
-
-        // format countdown string + set tag value
-        countdown.innerHTML = "Ready to Start in: " + seconds;
-
-    }, 1000);
-}
-
 document.getElementById('button-join').addEventListener('click', function(){
     document.getElementById('id-chat').hidden = false;
     document.getElementById('id-join').hidden = true;
@@ -121,9 +93,19 @@ document.getElementById('button-join').addEventListener('click', function(){
       socket.emit('join', {name: userId});
     });
     socket.on('start game', function (msg) {
-        if (msg === "players reached"){
-            document.getElementById('min-players').hidden = false;
-            countdown();
+        document.getElementById('min-players').hidden = false;
+        var countdown = document.getElementById('countdown');
+
+        // format countdown string + set tag value
+        countdown.innerHTML = "Ready to Start in: " + msg;
+
+        if (msg === "countdown finished"){
+            document.getElementById('id-game').hidden = false;
+            document.getElementById('id-chat').hidden = true;
+            document.getElementById('h1-id-username').innerHTML = userId;
+            window.addEventListener('keydown', function(event) {
+                socket.emit('input', event.keyCode);
+            });
         }
     });
     socket.on('chat message', function(msg){

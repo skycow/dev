@@ -102,8 +102,25 @@ app.use('*', function(request, response){
 })
 
 function runCountdown() {
-  if (!game_started) io.emit('start game', "players reached");
-  game_started = true;
+    var target_date = new Date().getTime() + (10*1000);
+    var seconds, pastSeconds = 0;
+// update the tag with id "countdown" every 1 second
+    var refresh = setInterval(function () {
+
+        // find the amount of "seconds" between now and target
+        var current_date = new Date().getTime();
+        var seconds_left = (target_date - current_date + 1) / 1000;
+        seconds = parseInt(seconds_left % 60);
+
+        if (pastSeconds !== seconds) {
+            io.emit('start game', seconds.toString());
+            pastSeconds = seconds;
+        }
+        if (seconds === 0){
+            io.emit('start game', 'countdown finished');
+            clearInterval(refresh);
+        }
+    }, 1000);
 }
 
 let activeUsers = [];
@@ -114,7 +131,10 @@ io.on('connection', function(socket){
     io.emit('chat message',data.name + ' has joined the game');
     activeUsers[socket.id] = data.name;
     connections++;    
-    if (connections >= TARGET_USERS_NUM) runCountdown();
+    if (connections >= TARGET_USERS_NUM) {
+        if (!game_started) runCountdown();
+        game_started = true;
+    }
 
     socket.on('chat message', function(msg){
       io.emit('chat message', data.name + ": " + msg);
