@@ -4,6 +4,7 @@
 	<meta charset = "UTF-8">
 	<title>Battle Royal</title>
   <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/tiling.css">
 </head>
 <body>
   
@@ -102,10 +103,16 @@
 
   <div id="id-game">
     <h1 id="h1-id-username"></h1>
-    <img src="images/MapTest1.png">
+    <canvas id = "canvas-main" width = "800" height = "600"></canvas>
+    <!--<img src="images/MapTest1.png">-->
   </div>
   
   <script src="/socket.io/socket.io.js"></script>
+  <script src="scripts/network-ids.js"></script>
   <script src="scripts/script.js"></script>
+  <script src="scripts/graphics.js"></script>
+  <script src="scripts/input.js"></script>
+  <script src="scripts/userData.js"></script>
+  <script src="scripts/clientGame.js"></script>
 </body>
 </html>

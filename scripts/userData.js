@@ -1,0 +1,79 @@
+Rocket.logic.Player = function () {
+    let that = {};
+
+    let position = {
+        x: 25,
+        y: 25
+    };
+
+    let size = {
+        width: 0.05,
+        height: 0.05
+    };
+
+    let orientation = 0;
+    let rotateRate = Math.PI;
+    let speed = 200;
+    let flipped = true;
+
+    Object.defineProperty(that, 'orientation', {
+        get: () => orientation,
+        set: (value) => { orientation = value }
+    });
+
+    Object.defineProperty(that, 'speed', {
+        get: () => speed,
+        set: value => { speed = value; }
+    });
+
+    Object.defineProperty(that, 'rotateRate', {
+        get: () => rotateRate,
+        set: value => { rotateRate = value; }
+    });
+
+    Object.defineProperty(that, 'position', {
+        get: () => position
+    });
+
+    Object.defineProperty(that, 'size', {
+        get: () => size
+    });
+
+    that.moveUp = function(elapsedTime) {
+        position.y -= speed * (elapsedTime / 1000);
+    };
+
+    that.moveDown = function(elapsedTime) {
+        position.y += speed * (elapsedTime / 1000);
+    };
+
+    that.moveLeft = function(elapsedTime) {
+        position.x -= speed * (elapsedTime / 1000);
+    };
+
+    that.moveRight = function(elapsedTime) {
+        position.x += speed * (elapsedTime / 1000);
+    };
+
+    that.rotateRight = function(elapsedTime) {
+        orientation += ((rotateRate/1000) * elapsedTime);
+    };
+
+    that.rotateLeft = function(elapsedTime) {
+        orientation -= ((rotateRate/1000) * elapsedTime);
+    };
+
+    that.flipIt = function (elapsedTime) {
+        if (flipped) {
+            orientation += Math.PI;
+        } else {
+            orientation -= Math.PI;
+        }
+        flipped = !flipped;
+    };
+
+    that.update = function(elapsedTime) {
+    };
+
+    return that;
+};

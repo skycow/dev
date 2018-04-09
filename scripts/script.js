@@ -8,6 +8,12 @@ document.getElementById('min-players').hidden = true;
 document.getElementById('id-highscores').hidden = true;
 document.getElementById('id-options').hidden = true;
 let socket;
+let Rocket = {
+    input: {},
+    logic: {},
+    main: {},
+    graphics: {}
+};
 
 document.getElementById('button-signin').addEventListener('click',function(){
     let req = new XMLHttpRequest();
@@ -109,6 +115,7 @@ document.getElementById('button-join').addEventListener('click', function(){
         }
 
         if (msg === "countdown finished"){
+            Rocket.main.init(socket);
             document.getElementById('id-game').hidden = false;
             document.getElementById('id-chat').hidden = true;
             document.getElementById('h1-id-username').innerHTML = userId;
