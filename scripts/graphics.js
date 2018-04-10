@@ -98,12 +98,61 @@ Rocket.graphics = (function() {
         images[location].src = 'images/' + location;
     }
 
+    function TiledImage(spec) {
+        'use strict';
+        var viewport = {
+                left: 0,
+                top: 0
+            },
+            that = {
+                get viewport() { return viewport; },
+                get tileSize() { return spec.tileSize; },
+                get size() { return spec.size; },
+                get pixel() { return spec.pixel; },
+                get assetKey() { return spec.assetKey; },
+                get tilesX() { return spec.pixel.width / spec.tileSize; },
+                get tilesY() { return spec.pixel.height / spec.tileSize; }
+            };
+
+        //------------------------------------------------------------------
+        //
+        // Set the top/left corner of the image viewport.  By definition the
+        // size of the viewport is square and of size 1,1 in world coordinates.
+        //
+        //------------------------------------------------------------------
+        that.setViewport = function(left, top) {
+            viewport.left = left;
+            viewport.top = top;
+        };
+
+        //------------------------------------------------------------------
+        //
+        // Move the viewport by the distance vector.
+        //
+        //------------------------------------------------------------------
+        that.move = function(vector) {
+            viewport.left += vector.x;
+            viewport.top += vector.y;
+
+            //
+            // Make sure we don't move beyond the viewport bounds
+            viewport.left = Math.max(viewport.left, 0);
+            viewport.top = Math.max(viewport.top, 0);
+
+            viewport.left = Math.min(viewport.left, spec.size.width - 1);
+            viewport.top = Math.min(viewport.top, spec.size.height - 1);
+        }
+
+        return that;
+    };
+
     return {
         clear: clear,
         saveContext: saveContext,
         restoreContext: restoreContext,
         rotateCanvas: rotateCanvas,
         draw: draw,
-        createImage: createImage
+        createImage: createImage,
+        TiledImage: TiledImage
     };
 }());

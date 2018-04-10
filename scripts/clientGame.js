@@ -1,4 +1,4 @@
-Rocket.main = (function(input, logic, graphics) {
+Rocket.main = (function(input, logic, graphics, assets) {
 
     let socketIO = null;
 
@@ -6,14 +6,51 @@ Rocket.main = (function(input, logic, graphics) {
         myPlayer = {
             model: logic.Player(),
             texture: 'playerShip1_blue.png'
-        };
+        },
+        background = null;
 
     function updateMsgs(){
 
     }
 
+    function shiftView(position, elapsedTime) {
+        let newCenter = {
+                x: position.x,
+                y: position.y
+            }, vector = null;
+
+        if (position.x >= 0.8 || position.x <= 0.2) {
+            let x;
+            if (position.x >= 0.8) {
+                newCenter.x = 0.8;
+                x = Math.abs(newCenter.x - position.x);
+            } else {
+                newCenter.x = 0.8;
+                x = Math.abs(newCenter.x - position.x)* (-1);
+            }
+            vector = { x: x, y: 0 };
+            background.move(vector);
+        }
+        if (position.y >= 0.8 || position.y <= 0.2) {
+            let y;
+            if (position.y >= 0.8) {
+                newCenter.y = 0.8;
+                y = Math.abs(newCenter.y - position.y);
+            } else {
+                newCenter.x = 0.8;
+                y = Math.abs(newCenter.y - position.y)* (-1);
+            }
+            vector = { x: 0, y: y };
+            background.move(vector);
+        }
+
+        position.x = newCenter.x;
+        position.y = newCenter.y;
+    }
+
     function update(elapsedTime){
         updateMsgs();
+        shiftView(myPlayer.model.position, elapsedTime);
     }
 
     function processInput(elapsedTime){
@@ -38,7 +75,16 @@ Rocket.main = (function(input, logic, graphics) {
 
     function init(socket) {
         socketIO = socket;
+        background = graphics.TiledImage({
+            pixel: { width: assets['background'].width, height: assets['background'].height },
+            size: { width: 4.375, height: 2.5 },
+            tileSize: assets['background'].tileSize,
+            assetKey: 'background'
+        });
+
+        background.setViewport(0.00, 0.00);
         graphics.createImage(myPlayer.texture);
+
         keyboard.registerHandler(elapsedTime => {
                 let message = {
                     id: messageId++,
@@ -141,4 +187,4 @@ Rocket.main = (function(input, logic, graphics) {
         init : init
     };
 
-}(Rocket.input, Rocket.logic, Rocket.graphics));
+}(Rocket.input, Rocket.logic, Rocket.graphics, Rocket.assets));

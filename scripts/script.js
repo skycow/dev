@@ -12,7 +12,8 @@ let Rocket = {
     input: {},
     logic: {},
     main: {},
-    graphics: {}
+    graphics: {},
+    assets: {}
 };
 
 document.getElementById('button-signin').addEventListener('click',function(){
@@ -97,6 +98,7 @@ document.getElementById('button-join').addEventListener('click', function(){
     socket = io();
     socket.on('connect', function(){
       socket.emit('join', {name: userId});
+      Rocket.assets.init();
     });
     socket.on('start game', function (msg) {
         if (msg === "player reconnect") {
