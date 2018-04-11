@@ -7,9 +7,9 @@
   <link rel="stylesheet" href="css/tiling.css">
 </head>
 <body>
-  
+
   <div id="id-welcome" class="container">
-    
+
     <div class="card border-primary mb-3">
       <h1>Welcome!</h1>
       <input type="text" id="id-username" placeholder="Username">
@@ -21,12 +21,12 @@
       <button id="button-signin" class="btn btn-primary">Sign In</button>
     </div>
     <br>
-    
+
     <button id="button-newuser" class="btn btn-primary">Create New User</button>
   </div>
-  
+
   <div id="id-signup" class="container">
-    
+
     <div class="card border-primary mb-3">
       <h1>Sign up!</h1>
       <input type="text" id="id-newusername" name="name-username" placeholder="Username">
@@ -34,19 +34,19 @@
       <input type="password" id="id-newpassword" name="name-password" placeholder="Password">
       <br>
       <input type="password" id="id-newpassword2" name="name-password2" placeholder="Verify Password">
-      <br> 
+      <br>
       <span id="id-signuperror"  style="color:red"></span>
       <br>
       <button id="button-signup" class="btn btn-primary">Sign Up</button>
     </div>
-    
+
     <br>
-    
+
     <button id="button-signinret" class="btn btn-primary">Sign In</button>
   </div>
 
   <div id="id-join" class="container">
-    
+
       <div class="card border-primary mb-3">
         <button id="button-join" class="btn btn-primary">Join Game</button>
         <br>
@@ -77,27 +77,27 @@
     </div>
   </div>
 
-   
-  <div id="id-highscores" class="container">  
+
+  <div id="id-highscores" class="container">
     <div class="card border-primary mb-3">
       <h1>High Scores!</h1>
       <ol id="id-scores-list" class="list-group"></ol>
     </div>
-    
+
     <br>
-    
+
     <button id="button-high-back" class="btn btn-primary">Back</button>
   </div>
-    
+
   <div id="id-options" class="container">
-    
+
     <div class="card border-primary mb-3">
       <h1>Options</h1>
       <p>No Options Available. Coming soon!</p>
     </div>
-    
+
     <br>
-    
+
     <button id="button-options-back" class="btn btn-primary">Back</button>
   </div>
 
@@ -106,9 +106,10 @@
     <canvas id = "canvas-main" width = "800" height = "600"></canvas>
     <!--<img src="images/MapTest1.png">-->
   </div>
-  
+
   <script src="/socket.io/socket.io.js"></script>
   <script src="scripts/network-ids.js"></script>
+  <script src="scripts/sha256.js"></script>
   <script src="scripts/script.js"></script>
   <script src="scripts/graphics.js"></script>
   <script src="scripts/input.js"></script>

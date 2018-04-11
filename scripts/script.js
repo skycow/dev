@@ -16,28 +16,37 @@ let Rocket = {
 };
 
 document.getElementById('button-signin').addEventListener('click',function(){
-    let req = new XMLHttpRequest();
-    req.responseType = 'json';
-    req.open("POST", "/signin");
-    req.setRequestHeader("Content-Type","application/json");
-    req.onload  = function() {
-      var jsonResponse = req.response;
-      // do something with jsonResponse
-      if(req.response.error) {
-        document.getElementById('id-signinerror').innerHTML = req.response.error;
-      } else if (req.response.authenticated) {
-        document.getElementById('id-join').hidden = false;
-        document.getElementById('id-welcome').hidden = true;
-        document.getElementById('id-signup').hidden = true;
+  let req = new XMLHttpRequest();
+  req.responseType = 'json';
+  req.open("POST", "/signin");
+  req.setRequestHeader("Content-Type","application/json");
+  req.onload  = function() {
+    var jsonResponse = req.response;
+    // do something with jsonResponse
+    if(req.response.error) {
+      document.getElementById('id-signinerror').innerHTML = req.response.error;
+    } else if (req.response.authenticated) {
+      document.getElementById('id-join').hidden = false;
+      document.getElementById('id-welcome').hidden = true;
+      document.getElementById('id-signup').hidden = true;
 
-        userId = document.getElementById("id-username").value;
+      userId = document.getElementById("id-username").value;
 
-      } else {
-        document.getElementById('id-signinerror').innerHTML = "Unknown Error";
-      }
-   };
-  //  req.send({'user':'username'});
-    req.send(JSON.stringify({'username': document.getElementById("id-username").value, 'password': document.getElementById("id-password").value}));
+    } else {
+      document.getElementById('id-signinerror').innerHTML = "Unknown Error";
+    }
+  };
+
+  sha256(document.getElementById("id-password").value)
+  .then((passHash)=>{
+    req.send(
+      JSON.stringify(
+        {'username': document.getElementById("id-username").value,
+        'password': passHash
+        }
+      )
+    );
+  });
 });
 
 document.getElementById('button-signup').addEventListener('click',function(){
@@ -60,8 +69,16 @@ document.getElementById('button-signup').addEventListener('click',function(){
     } else {
       document.getElementById('id-signinerror').innerHTML = "Unknown Error";
     }
- };
-  req.send(JSON.stringify({'username': document.getElementById("id-newusername").value, 'password': document.getElementById("id-newpassword").value}));
+  };
+  sha256(document.getElementById("id-newpassword").value)
+  .then((passHash)=>{
+    req.send(
+      JSON.stringify(
+        {'username': document.getElementById("id-newusername").value, 'password': passHash
+        }
+      )
+    );
+  });
 });
 
 document.getElementById('button-newuser').addEventListener('click',function(){
