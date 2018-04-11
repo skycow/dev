@@ -2,8 +2,8 @@ Rocket.logic.Player = function () {
     let that = {};
 
     let position = {
-        x: 25,
-        y: 25
+        x: 0.5,
+        y: 0.5
     };
 
     let size = {
@@ -13,7 +13,7 @@ Rocket.logic.Player = function () {
 
     let orientation = 0;
     let rotateRate = Math.PI;
-    let speed = 200;
+    let speed = .3;
     let flipped = true;
 
     Object.defineProperty(that, 'orientation', {

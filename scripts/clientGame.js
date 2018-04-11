@@ -25,7 +25,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
                 newCenter.x = 0.8;
                 x = Math.abs(newCenter.x - position.x);
             } else {
-                newCenter.x = 0.8;
+                newCenter.x = 0.2;
                 x = Math.abs(newCenter.x - position.x)* (-1);
             }
             vector = { x: x, y: 0 };
@@ -37,7 +37,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
                 newCenter.y = 0.8;
                 y = Math.abs(newCenter.y - position.y);
             } else {
-                newCenter.x = 0.8;
+                newCenter.y = 0.2;
                 y = Math.abs(newCenter.y - position.y)* (-1);
             }
             vector = { x: 0, y: y };
@@ -59,6 +59,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
 
     function render(){
         graphics.clear();
+        background.render();
         graphics.draw(myPlayer.texture, myPlayer.model.position, myPlayer.model.size, myPlayer.model.orientation);
     }
 
@@ -77,13 +78,14 @@ Rocket.main = (function(input, logic, graphics, assets) {
         socketIO = socket;
         background = graphics.TiledImage({
             pixel: { width: assets['background'].width, height: assets['background'].height },
-            size: { width: 4.375, height: 2.5 },
+            size: { width: 5, height: 5 },
             tileSize: assets['background'].tileSize,
             assetKey: 'background'
         });
 
         background.setViewport(0.00, 0.00);
         graphics.createImage(myPlayer.texture);
+        graphics.initGraphics();
 
         keyboard.registerHandler(elapsedTime => {
                 let message = {

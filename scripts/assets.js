@@ -5,14 +5,8 @@ Rocket.assets.init = function () {
         source: 'images/playerShip1_blue.png'
     }];
 
-    function numberPad(n, p, c) {
-        var pad_char = typeof c !== 'undefined' ? c : '0',
-            pad = new Array(1 + p).join(pad_char);
-
-        return (pad + n).slice(-pad.length);
-    }
-
     function createImage(tileKey, location) {
+        console.log(tileKey)
         Rocket.assets[tileKey] = {
             image: new Image(),
             key: tileKey,
@@ -38,7 +32,7 @@ Rocket.assets.init = function () {
 
         for (let tileY = 0; tileY < numberY; tileY += 1) {
             for (let tileX = 0; tileX < numberX; tileX += 1) {
-                tileFile =  numberPad((tileY * numberX + tileX), 3);
+                tileFile =  Rocket.assets.numberPad((tileY * numberX + tileX), 3);
                 tileSource = rootName + tileFile + '.jpg';
                 tileKey = rootKey + '-' + tileFile;
                 // assetArray.push({
@@ -53,4 +47,11 @@ Rocket.assets.init = function () {
     prepareTiledImage(assetOrder, 'images/background/tiles', 'background', 1000, 1000, 100);
 
 };
+
+Rocket.assets.numberPad = function (n, p, c) {
+    var pad_char = typeof c !== 'undefined' ? c : '0',
+        pad = new Array(1 + p).join(pad_char);
+
+    return (pad + n).slice(-pad.length);
+}
 
