@@ -5,7 +5,9 @@
 // ------------------------------------------------------------------
 Rocket.graphics = (function() {
     let canvas = document.getElementById('canvas-main');
+    let canvas_mini = document.getElementById('canvas-mini');
     let context = canvas.getContext('2d');
+    let context_mini = canvas.getContext('2d');
 
     let images = {};
     let world = {
@@ -92,13 +94,12 @@ Rocket.graphics = (function() {
     //
     //------------------------------------------------------------------
     function rotateCanvas(center, rotation) {
-        context.translate(center.x * canvas.width, center.y * canvas.height);
-        context.rotate(rotation);
-        context.translate(-center.x * canvas.width, -center.y * canvas.height);
-        // context.translate(center.x * world.size + world.left, center.y * world.size + world.top);
+        // context.translate(center.x * canvas.width, center.y * canvas.height);
         // context.rotate(rotation);
-        // context.translate(-(center.x * world.size + world.left), -(center.y * world.size + world.top));
-
+        // context.translate(-center.x * canvas.width, -center.y * canvas.height);
+        context.translate(center.x * world.size + world.left, center.y * world.size + world.top);
+        context.rotate(rotation);
+        context.translate(-(center.x * world.size + world.left), -(center.y * world.size + world.top));
     }
 
     //------------------------------------------------------------------
@@ -123,14 +124,86 @@ Rocket.graphics = (function() {
 
         rotateCanvas(center, orientation);
 
-        context.drawImage(images[texture],
-            localCenter.x - localSize.width / 2,
-            localCenter.y - localSize.height / 2,
-            localSize.width,
-            localSize.height);
+        context.drawImage(images[texture], 0, 0, images[texture].width, images[texture].height,
+            Math.floor((center.x - size.width / 2) * world.size + world.left),
+            Math.floor((center.y - size.height / 2) * world.size + world.top),
+            Math.ceil(size.width * world.size), Math.ceil(size.height * world.size));
+            // localCenter.x - localSize.width / 2,
+            // localCenter.y - localSize.height / 2,
+            // localSize.width,
+            // localSize.height);
+        // sprite.center.x - sprite.width / 2,		// Where to draw the sprite
+        // sprite.center.y - sprite.height / 2,
+        //     sprite.width, sprite.height
+
+        context.globalAlpha = .2;
+        context.beginPath();
+        // context.moveTo(Math.floor((center.x - size.width / 2) * world.size + world.left) + (size.width * world.size/2),
+        //     Math.floor((center.y - size.height / 2) * world.size + world.top) + (size.width * world.size/2));
+        context.arc(Math.floor((center.x - size.width / 2) * world.size + world.left) + (size.width * world.size/2),
+            Math.floor((center.y - size.height / 2) * world.size + world.top) + (size.width * world.size/2),
+            world.size/3, Math.PI*(13/8), Math.PI*(3/8));
+        context.lineTo(Math.floor((center.x - size.width / 2) * world.size + world.left) + (size.width * world.size/2),
+            Math.floor((center.y - size.height / 2) * world.size + world.top) + (size.width * world.size/2));
+        context.fillStyle = 'red';
+        context.fill();
+        context.stroke();
+
+        context.beginPath();
+        context.arc(Math.floor((center.x - size.width / 2) * world.size + world.left) + (size.width * world.size/2),
+            Math.floor((center.y - size.height / 2) * world.size + world.top) + (size.width * world.size/2),
+            world.size/3, Math.PI*(3/8), Math.PI*(13/8), true);
+        context.lineTo(Math.floor((center.x - size.width / 2) * world.size + world.left) + (size.width * world.size/2),
+            Math.floor((center.y - size.height / 2) * world.size + world.top) + (size.width * world.size/2));
+        context.fillStyle = 'red';
+        context.fill();
+        context.stroke();
+
+
         context.restore();
 
     }
+
+    function miniMap() {
+        var that = {},
+            ready = false,
+            image_map = new Image();
+
+        image_map.onload = function () {
+            ready = true;
+        };
+        image_map.src = 'images/background/MapTest1.png';
+
+        that.drawMini = function () {
+            if (ready) {
+                context_mini.save();
+
+                context_mini.drawImage(
+                    image_map,
+                    100,
+                    100,
+                    canvas_mini.width/2, canvas_mini.height/2);
+
+                context_mini.restore();
+            }
+        };
+
+        that.drawPosition = function (position, view, size) {
+            context_mini.save();
+
+            context_mini.beginPath();
+            context_mini.arc(((position.x + view.left)*canvas_mini.width/2/size.width) + 100,
+                ((position.y + view.top)*canvas_mini.height/2/size.height) + 100,
+                1.5, 0, 2 * Math.PI);
+            context_mini.fillStyle = 'red';
+            context_mini.fill();
+            context_mini.stroke();
+
+            context_mini.restore();
+        };
+
+        return that;
+    };
 
     function createImage(location) {
         images[location] = new Image();
@@ -231,7 +304,6 @@ Rocket.graphics = (function() {
 
                 tileAssetName = spec.assetKey + '-' + Rocket.assets.numberPad(tileTop * that.tilesX + tileLeft, 3);
 
-                console.log(tileAssetName);
                 context.drawImage(
                     Rocket.assets[tileAssetName].image,
                     tileRenderXStart * spec.tileSize, tileRenderYStart * spec.tileSize,
@@ -269,6 +341,7 @@ Rocket.graphics = (function() {
         draw: draw,
         createImage: createImage,
         TiledImage: TiledImage,
-        initGraphics: initGraphics
+        initGraphics: initGraphics,
+        miniMap: miniMap
     };
 }());

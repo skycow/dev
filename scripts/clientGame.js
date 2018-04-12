@@ -7,7 +7,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
             model: logic.Player(),
             texture: 'playerShip1_blue.png'
         },
-        background = null;
+        background = null, mini = graphics.miniMap();
 
     function updateMsgs(){
 
@@ -19,25 +19,25 @@ Rocket.main = (function(input, logic, graphics, assets) {
                 y: position.y
             }, vector = null;
 
-        if (position.x >= 0.8 || position.x <= 0.2) {
+        if (position.x >= 0.85 || position.x <= 0.15) {
             let x;
-            if (position.x >= 0.8) {
-                newCenter.x = 0.8;
+            if (position.x >= 0.85) {
+                newCenter.x = 0.85;
                 x = Math.abs(newCenter.x - position.x);
             } else {
-                newCenter.x = 0.2;
+                newCenter.x = 0.15;
                 x = Math.abs(newCenter.x - position.x)* (-1);
             }
             vector = { x: x, y: 0 };
             background.move(vector);
         }
-        if (position.y >= 0.8 || position.y <= 0.2) {
+        if (position.y >= 0.9 || position.y <= 0.1) {
             let y;
-            if (position.y >= 0.8) {
-                newCenter.y = 0.8;
+            if (position.y >= 0.9) {
+                newCenter.y = 0.9;
                 y = Math.abs(newCenter.y - position.y);
             } else {
-                newCenter.y = 0.2;
+                newCenter.y = 0.1;
                 y = Math.abs(newCenter.y - position.y)* (-1);
             }
             vector = { x: 0, y: y };
@@ -61,6 +61,8 @@ Rocket.main = (function(input, logic, graphics, assets) {
         graphics.clear();
         background.render();
         graphics.draw(myPlayer.texture, myPlayer.model.position, myPlayer.model.size, myPlayer.model.orientation);
+        mini.drawMini();
+        mini.drawPosition(myPlayer.model.position, background.viewport, background.size);
     }
 
     function gameLoop(time) {

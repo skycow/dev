@@ -120,7 +120,8 @@ document.getElementById('button-join').addEventListener('click', function(){
             Rocket.main.init(socket);
             document.getElementById('id-game').hidden = false;
             document.getElementById('id-chat').hidden = true;
-            // document.getElementById('h1-id-username').innerHTML = userId;
+            document.getElementById('h1-id-username').innerHTML = userId;
+            document.getElementById('field-clock').innerHTML = "02:00";
             window.addEventListener('keydown', function(event) {
                 socket.emit('input', event.keyCode);
             });
