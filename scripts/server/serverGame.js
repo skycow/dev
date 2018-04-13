@@ -2,6 +2,7 @@
 let connections = 0;
 let TARGET_USERS_NUM = 1;
 let game_started = false;
+let reconnection = false;
 let activeUsers = [];
 
 let present = require('present');
@@ -286,6 +287,7 @@ function initializeSocketIO(http) {
             if (seconds === 0){
                 io.emit('start game', 'countdown finished');
                 clearInterval(refresh);
+                reconnection = true;
             }
         }, 1000);
     }
@@ -383,7 +385,7 @@ function initializeSocketIO(http) {
     io.on('connection', function(socket){
         socket.on('join', function(data){
             console.log(data.name + ' with id ' + socket.id + ' connected');
-            if(game_started) {
+            if(reconnection) {
                 if(typeof activeUsers[data.name] !== 'undefined') {
                     activeUsers[data.name].socket = socket;
                     activeUsers[data.name].id = socket.id;
@@ -406,6 +408,10 @@ function initializeSocketIO(http) {
 
                 socket.emit(NetworkIds.CONNECT_ACK, {
                     position: newUser.position,
+                    view: {
+                        left: Math.random()*4,
+                        top: Math.random()*4
+                    }
                 });
 
                 connections++;

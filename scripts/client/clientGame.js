@@ -28,6 +28,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
     function connectPlayerSelf(data) {
         myPlayer.model.position.x = data.position.x;
         myPlayer.model.position.y = data.position.y;
+        background.setViewport(data.view.left, data.view.top);
     }
 
     function shiftView(position, elapsedTime) {
