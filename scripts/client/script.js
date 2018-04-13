@@ -118,9 +118,6 @@ document.getElementById('button-join').addEventListener('click', function(){
           document.getElementById('id-game').hidden = false;
           document.getElementById('id-chat').hidden = true;
           document.getElementById('h1-id-username').innerHTML = userId;
-          // window.addEventListener('keydown', function(event) {
-          //     socket.emit('input', event.keyCode);
-          // });
         } else {
           document.getElementById('min-players').hidden = false;
           var countdown = document.getElementById('countdown');
@@ -134,9 +131,6 @@ document.getElementById('button-join').addEventListener('click', function(){
             document.getElementById('id-chat').hidden = true;
             document.getElementById('h1-id-username').innerHTML = userId;
             document.getElementById('field-clock').innerHTML = "02:00";
-            // window.addEventListener('keydown', function(event) {
-            //     socket.emit('input', event.keyCode);
-            // });
         }
     });
     socket.on('chat message', function(msg){
