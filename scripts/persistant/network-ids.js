@@ -16,8 +16,20 @@
             value: 'input',
             writable: false
         },
-        'INPUT_MOVE': {
-            value: 'move',
+        'INPUT_MOVE_DOWN': {
+            value: 'moveDown',
+            writable: false
+        },
+        'INPUT_MOVE_UP': {
+            value: 'moveUp',
+            writable: false
+        },
+        'INPUT_MOVE_LEFT': {
+            value: 'moveLeft',
+            writable: false
+        },
+        'INPUT_MOVE_RIGHT': {
+            value: 'moveRight',
             writable: false
         },
         'INPUT_ROTATE_LEFT': {

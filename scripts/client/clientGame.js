@@ -7,10 +7,27 @@ Rocket.main = (function(input, logic, graphics, assets) {
             model: logic.Player(),
             texture: 'playerShip1_blue.png'
         },
-        background = null, mini = graphics.miniMap();
+        background = null,
+        mini = graphics.miniMap(),
+        jobQueue = logic.createQueue();
 
     function updateMsgs(){
+        let processMe = jobQueue;
+        jobQueue = jobQueue = logic.createQueue();
+        while (!processMe.empty) {
+            let message = processMe.dequeue();
+            console.log('message received: ' + message);
+            switch (message.type) {
+                case NetworkIds.CONNECT_ACK:
+                    connectPlayerSelf(message.data);
+                    break;
+            }
+        }
+    }
 
+    function connectPlayerSelf(data) {
+        myPlayer.model.position.x = data.position.x;
+        myPlayer.model.position.y = data.position.y;
     }
 
     function shiftView(position, elapsedTime) {
@@ -76,7 +93,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
         requestAnimationFrame(gameLoop);
     };
 
-    function init(socket) {
+    function init(socket, userId) {
         socketIO = socket;
         background = graphics.TiledImage({
             pixel: { width: assets['background'].width, height: assets['background'].height },
@@ -93,7 +110,8 @@ Rocket.main = (function(input, logic, graphics, assets) {
                 let message = {
                     id: messageId++,
                     elapsedTime: elapsedTime,
-                    type: NetworkIds.INPUT_MOVE
+                    type: NetworkIds.INPUT_MOVE_UP,
+                    userId: userId
                 };
                 socket.emit(NetworkIds.INPUT, message);
                 // messageHistory.enqueue(message);
@@ -105,7 +123,8 @@ Rocket.main = (function(input, logic, graphics, assets) {
                 let message = {
                     id: messageId++,
                     elapsedTime: elapsedTime,
-                    type: NetworkIds.INPUT_MOVE
+                    type: NetworkIds.INPUT_MOVE_DOWN,
+                    userId: userId
                 };
                 socket.emit(NetworkIds.INPUT, message);
                 // messageHistory.enqueue(message);
@@ -117,7 +136,8 @@ Rocket.main = (function(input, logic, graphics, assets) {
                 let message = {
                     id: messageId++,
                     elapsedTime: elapsedTime,
-                    type: NetworkIds.INPUT_MOVE
+                    type: NetworkIds.INPUT_MOVE_LEFT,
+                    userId: userId
                 };
                 socket.emit(NetworkIds.INPUT, message);
                 // messageHistory.enqueue(message);
@@ -130,7 +150,8 @@ Rocket.main = (function(input, logic, graphics, assets) {
                 let message = {
                     id: messageId++,
                     elapsedTime: elapsedTime,
-                    type: NetworkIds.INPUT_MOVE
+                    type: NetworkIds.INPUT_MOVE_RIGHT,
+                    userId: userId
                 };
                 socket.emit(NetworkIds.INPUT, message);
                 // messageHistory.enqueue(message);
@@ -142,7 +163,8 @@ Rocket.main = (function(input, logic, graphics, assets) {
                 let message = {
                     id: messageId++,
                     elapsedTime: elapsedTime,
-                    type: NetworkIds.INPUT_ROTATE_RIGHT
+                    type: NetworkIds.INPUT_ROTATE_RIGHT,
+                    userId: userId
                 };
                 socket.emit(NetworkIds.INPUT, message);
                 // messageHistory.enqueue(message);
@@ -154,7 +176,8 @@ Rocket.main = (function(input, logic, graphics, assets) {
                 let message = {
                     id: messageId++,
                     elapsedTime: elapsedTime,
-                    type: NetworkIds.INPUT_FLIP
+                    type: NetworkIds.INPUT_FLIP,
+                    userId: userId
                 };
                 socket.emit(NetworkIds.INPUT, message);
                 // messageHistory.enqueue(message);
@@ -166,7 +189,8 @@ Rocket.main = (function(input, logic, graphics, assets) {
                 let message = {
                     id: messageId++,
                     elapsedTime: elapsedTime,
-                    type: NetworkIds.INPUT_ROTATE_LEFT
+                    type: NetworkIds.INPUT_ROTATE_LEFT,
+                    userId: userId
                 };
                 socket.emit(NetworkIds.INPUT, message);
                 // messageHistory.enqueue(message);
@@ -178,11 +202,20 @@ Rocket.main = (function(input, logic, graphics, assets) {
                 let message = {
                     id: messageId++,
                     elapsedTime: elapsedTime,
-                    type: NetworkIds.INPUT_FIRE
+                    type: NetworkIds.INPUT_FIRE,
+                    userId: userId
                 };
                 socket.emit(NetworkIds.INPUT, message);
             },
             Rocket.input.KeyEvent.DOM_VK_UP, false);
+
+        socket.on(NetworkIds.CONNECT_ACK, data => {
+            console.log('did i get here')
+            jobQueue.enqueue({
+                type: NetworkIds.CONNECT_ACK,
+                data: data
+            });
+        });
 
         requestAnimationFrame(gameLoop);
     }
@@ -192,3 +225,4 @@ Rocket.main = (function(input, logic, graphics, assets) {
     };
 
 }(Rocket.input, Rocket.logic, Rocket.graphics, Rocket.assets));
+

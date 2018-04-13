@@ -27,13 +27,13 @@ Rocket.graphics = (function() {
         // based on whether the width or height is the largest dimension.
         if (canvas.width < canvas.height) {
             smallestSize = canvas.width;
-            world.size = smallestSize * 0.9;
+            world.size = smallestSize;
             world.left = Math.floor(canvas.width * 0.05);
-            world.top = (canvas.height - world.size) / 2;
+            world.top = 0;
         } else {
             smallestSize = canvas.height;
-            world.size = smallestSize * 0.9;
-            world.top = Math.floor(canvas.height * 0.05);
+            world.size = smallestSize;
+            world.top = 0;
             world.left = (canvas.width - world.size) / 2;
         }
 
@@ -152,7 +152,7 @@ Rocket.graphics = (function() {
         context.beginPath();
         context.arc(Math.floor((center.x - size.width / 2) * world.size + world.left) + (size.width * world.size/2),
             Math.floor((center.y - size.height / 2) * world.size + world.top) + (size.width * world.size/2),
-            world.size/3, Math.PI*(3/8), Math.PI*(13/8), true);
+            world.size/4, Math.PI*(3/8), Math.PI*(13/8), true);
         context.lineTo(Math.floor((center.x - size.width / 2) * world.size + world.left) + (size.width * world.size/2),
             Math.floor((center.y - size.height / 2) * world.size + world.top) + (size.width * world.size/2));
         context.fillStyle = 'red';

@@ -1,9 +1,9 @@
-Rocket.logic.Player = function () {
+function makePlayer() {
     let that = {};
 
     let position = {
-        x: 0.5,
-        y: 0.5
+        x: Math.random(),
+        y: Math.random()
     };
 
     let size = {
@@ -78,3 +78,5 @@ Rocket.logic.Player = function () {
 
     return that;
 };
+
+module.exports.makeplayer = makePlayer;
