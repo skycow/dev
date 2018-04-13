@@ -6,7 +6,7 @@ let fs = require('fs');
 let path=require('path');
 var bodyParser = require('body-parser');
 let connections = 0;
-let TARGET_USERS_NUM = 3;
+let TARGET_USERS_NUM = 1;
 let game_started = false;
 let activeUsers = [];
 
