@@ -38,16 +38,13 @@ document.getElementById('button-signin').addEventListener('click',function(){
     }
   };
 
-  sha256(document.getElementById("id-password").value)
-  .then((passHash)=>{
-    req.send(
-      JSON.stringify(
-        {'username': document.getElementById("id-username").value,
-        'password': passHash
-        }
-      )
-    );
-  });
+  req.send(
+    JSON.stringify(
+      {'username': document.getElementById("id-username").value,
+      'password': sha256(document.getElementById("id-password").value)
+      }
+    )
+  );
 });
 
 document.getElementById('button-signup').addEventListener('click',function(){
@@ -71,15 +68,13 @@ document.getElementById('button-signup').addEventListener('click',function(){
       document.getElementById('id-signinerror').innerHTML = "Unknown Error";
     }
   };
-  sha256(document.getElementById("id-newpassword").value)
-  .then((passHash)=>{
-    req.send(
-      JSON.stringify(
-        {'username': document.getElementById("id-newusername").value, 'password': passHash
-        }
-      )
-    );
-  });
+
+  req.send(
+    JSON.stringify(
+      {'username': document.getElementById("id-newusername").value, 'password': sha256(document.getElementById("id-newpassword").value)
+      }
+    )
+  );
 });
 
 document.getElementById('button-newuser').addEventListener('click',function(){
