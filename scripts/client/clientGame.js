@@ -9,7 +9,26 @@ Rocket.main = (function(input, logic, graphics, assets) {
         },
         background = null,
         mini = graphics.miniMap(),
-        jobQueue = logic.createQueue();
+        jobQueue = logic.createQueue(),
+        otherUsers = [];
+
+    function network() {
+        socketIO.on(NetworkIds.CONNECT_ACK, data => {
+            console.log('did i get here')
+            jobQueue.enqueue({
+                type: NetworkIds.CONNECT_ACK,
+                data: data
+            });
+        });
+
+        socketIO.on(NetworkIds.CONNECT_OTHER, data => {
+            console.log('did i get there')
+            jobQueue.enqueue({
+                type: NetworkIds.CONNECT_OTHER,
+                data: data
+            });
+        });
+    }
 
     function updateMsgs(){
         let processMe = jobQueue;
@@ -21,8 +40,28 @@ Rocket.main = (function(input, logic, graphics, assets) {
                 case NetworkIds.CONNECT_ACK:
                     connectPlayerSelf(message.data);
                     break;
+                case NetworkIds.CONNECT_OTHER:
+                    connectPlayerOther(message.data);
+                    break;
             }
         }
+    }
+
+    //------------------------------------------------------------------
+    //
+    // Handler for when a new player connects to the game.  We receive
+    // the state of the newly connected player model.
+    //
+    //------------------------------------------------------------------
+    function connectPlayerOther(data) {
+        let model = logic.OtherPlayer();
+        model.state.position.x = data.position.x;
+        model.state.position.y = data.position.y;
+
+        otherUsers[data.userId] = {
+            model: model,
+            texture: 'playerShip1_blue.png'
+        };
     }
 
     function connectPlayerSelf(data) {
@@ -37,25 +76,25 @@ Rocket.main = (function(input, logic, graphics, assets) {
                 y: position.y
             }, vector = null;
 
-        if (position.x >= 0.85 || position.x <= 0.15) {
+        if (position.x >= (1 - (1/3)) || position.x <= (1/3)) {
             let x;
-            if (position.x >= 0.85) {
-                newCenter.x = 0.85;
+            if (position.x >= (1 - (1/3))) {
+                newCenter.x = (1 - (1/3));
                 x = Math.abs(newCenter.x - position.x);
             } else {
-                newCenter.x = 0.15;
+                newCenter.x = (1/3);
                 x = Math.abs(newCenter.x - position.x)* (-1);
             }
             vector = { x: x, y: 0 };
             background.move(vector);
         }
-        if (position.y >= 0.9 || position.y <= 0.1) {
+        if (position.y >= (1 - (1/3)) || position.y <= (1/3)) {
             let y;
-            if (position.y >= 0.9) {
-                newCenter.y = 0.9;
+            if (position.y >= (1 - (1/3))) {
+                newCenter.y = (1 - (1/3));
                 y = Math.abs(newCenter.y - position.y);
             } else {
-                newCenter.y = 0.1;
+                newCenter.y = (1/3);
                 y = Math.abs(newCenter.y - position.y)* (-1);
             }
             vector = { x: 0, y: y };
@@ -78,6 +117,10 @@ Rocket.main = (function(input, logic, graphics, assets) {
     function render(){
         graphics.clear();
         background.render();
+        for (let index in otherUsers){
+            graphics.draw(otherUsers[index].texture, otherUsers[index].model.state.position,
+                otherUsers[index].model.size, otherUsers[index].model.direction)
+        }
         graphics.draw(myPlayer.texture, myPlayer.model.position, myPlayer.model.size, myPlayer.model.orientation);
         mini.drawMini();
         mini.drawPosition(myPlayer.model.position, background.viewport, background.size);
@@ -210,14 +253,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
             },
             Rocket.input.KeyEvent.DOM_VK_UP, false);
 
-        socket.on(NetworkIds.CONNECT_ACK, data => {
-            console.log('did i get here')
-            jobQueue.enqueue({
-                type: NetworkIds.CONNECT_ACK,
-                data: data
-            });
-        });
-
+        network();
         requestAnimationFrame(gameLoop);
     }
 

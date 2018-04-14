@@ -292,43 +292,35 @@ function initializeSocketIO(http) {
         }, 1000);
     }
     //my func done
-
-    //------------------------------------------------------------------
+    //
+    // ------------------------------------------------------------------
     //
     // Notifies the already connected clients about the arrival of this
     // new client.  Plus, tell the newly connected client about the
     // other players already connected.
     //
-    //------------------------------------------------------------------
-    // function notifyConnect(socket, newPlayer) {
-    //     for (let clientId in activeClients) {
-    //         let client = activeClients[clientId];
-    //         if (newPlayer.clientId !== clientId) {
-    //             //
-    //             // Tell existing about the newly connected player
-    //             client.socket.emit(NetworkIds.CONNECT_OTHER, {
-    //                 clientId: newPlayer.clientId,
-    //                 direction: newPlayer.direction,
-    //                 position: newPlayer.position,
-    //                 rotateRate: newPlayer.rotateRate,
-    //                 speed: newPlayer.speed,
-    //                 size: newPlayer.size
-    //             });
-    //
-    //             //
-    //             // Tell the new player about the already connected player
-    //             socket.emit(NetworkIds.CONNECT_OTHER, {
-    //                 clientId: client.player.clientId,
-    //                 direction: client.player.direction,
-    //                 position: client.player.position,
-    //                 rotateRate: client.player.rotateRate,
-    //                 speed: client.player.speed,
-    //                 size: client.player.size
-    //             });
-    //         }
-    //     }
-    // }
-    //
+    // ------------------------------------------------------------------
+    function notifyConnect(socket, newUser) {
+        for (let clientId in activeUsers) {
+            let client = activeUsers[clientId];
+            if (newUser.userId !== clientId) {
+                //
+                // Tell existing about the newly connected player
+                client.socket.emit(NetworkIds.CONNECT_OTHER, {
+                    userId: newUser.userId,
+                    position: newUser.position,
+                });
+
+                //
+                // Tell the new player about the already connected player
+                socket.emit(NetworkIds.CONNECT_OTHER, {
+                    userId: client.user.userId,
+                    position: client.user.position,
+                });
+            }
+        }
+    }
+
     // //------------------------------------------------------------------
     // //
     // // Notifies the already connected clients about the disconnect of
@@ -400,6 +392,7 @@ function initializeSocketIO(http) {
                 io.emit('chat message',data.name + ' has joined the game.');
                 let newUser = User.makeplayer();
                 newUser.clientId = socket.id;
+                newUser.userId = data.name;
                 activeUsers[data.name] = {
                     id: socket.id,
                     socket: socket,
@@ -413,6 +406,8 @@ function initializeSocketIO(http) {
                         top: Math.random()*4
                     }
                 });
+
+                notifyConnect(socket, newUser);
 
                 connections++;
                 if (connections >= TARGET_USERS_NUM) {
@@ -442,6 +437,7 @@ function initializeSocketIO(http) {
                 console.log(data.name + ' with id ' + socket.id + ' disconnected');
                 io.emit('chat message', data.name + ' has left the game');
             });
+
         });
     });
 }
