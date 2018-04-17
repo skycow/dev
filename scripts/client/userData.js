@@ -111,14 +111,20 @@ Rocket.logic.OtherPlayer = function() {
         height: 0.05
     };
     let state = {
-        direction: 0,
+        orientation: 0,
         position: {
             x: 0,
             y: 0
         }
     };
+    //
+    // let view = {
+    //     top: 0,
+    //     left: 0
+    // };
+
     let goal = {
-        direction: 0,
+        orientation: 0,
         position: {
             x: 0,
             y: 0
@@ -129,6 +135,10 @@ Rocket.logic.OtherPlayer = function() {
     Object.defineProperty(that, 'state', {
         get: () => state
     });
+
+    // Object.defineProperty(that, 'view', {
+    //     get: () => view
+    // });
 
     Object.defineProperty(that, 'goal', {
         get: () => goal
@@ -152,7 +162,7 @@ Rocket.logic.OtherPlayer = function() {
         if (updateFraction > 0) {
             //
             // Turn first, then move.
-            state.direction -= (state.direction - goal.direction) * updateFraction;
+            state.orientation -= (state.orientation - goal.orientation) * updateFraction;
 
             state.position.x -= (state.position.x - goal.position.x) * updateFraction;
             state.position.y -= (state.position.y - goal.position.y) * updateFraction;

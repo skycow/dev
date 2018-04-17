@@ -44,7 +44,7 @@ Rocket.assets.init = function () {
         }
     }
 
-    prepareTiledImage(assetOrder, 'images/background/tiles', 'background', 1000, 1000, 100);
+    prepareTiledImage(assetOrder, 'images/background/tiles', 'background', 2000, 2000, 100);
 
 };
 

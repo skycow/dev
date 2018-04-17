@@ -8,7 +8,7 @@
 (function(exports) {
     'use strict';
 
-    exports.createQ = function() {
+    exports.create = function() {
         let that = [];
 
         that.enqueue = function(value) {

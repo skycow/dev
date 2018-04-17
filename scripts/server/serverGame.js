@@ -19,7 +19,7 @@ let activeClients = {};
 let newMissiles = [];
 let activeMissiles = [];
 let hits = [];
-let inputQueue = Queue.createQ();
+let inputQueue = Queue.create();
 // let nextMissileId = 1;
 //
 // //------------------------------------------------------------------
@@ -53,12 +53,10 @@ function processInput(elapsedTime) {
     // Double buffering on the queue so we don't asynchronously receive inputs
     // while processing.
     let processMe = inputQueue;
-    inputQueue = Queue.createQ();
+    inputQueue = Queue.create();
 
     while (!processMe.empty) {
         let input = processMe.dequeue();
-        console.log(input);
-        console.log(input.clientId);
         let client = activeUsers[input.message.userId];
         client.lastMessageId = input.message.id;
         switch (input.message.type) {
@@ -80,6 +78,10 @@ function processInput(elapsedTime) {
             case NetworkIds.INPUT_ROTATE_RIGHT:
                 client.user.rotateRight(input.message.elapsedTime);
                 break;
+            case NetworkIds.INPUT_FLIP:
+                client.user.flipIt(input.message.elapsedTime);
+                break;
+
             // case NetworkIds.INPUT_FIRE:
             //     createMissile(input.clientId, client.player);
             //     break;
@@ -195,8 +197,10 @@ function updateClients(elapsedTime) {
         let update = {
             clientId: clientId,
             lastMessageId: client.lastMessageId,
-            direction: client.user.direction,
-            position: client.user.position,
+            orientation: client.user.orientation,
+            worldView: client.user.worldView,
+            // position: client.user.position,
+            // view: client.user.view,
             updateWindow: lastUpdate
         };
         if (client.user.reportUpdate) {
@@ -233,7 +237,7 @@ function updateClients(elapsedTime) {
     // Don't need these anymore, clean up
     hits.length = 0;
     //
-    // Reset the elapsedt time since last update so we can know
+    // Reset the elapsed time since last update so we can know
     // when to put out the next update.
     lastUpdate = 0;
 }
@@ -272,7 +276,7 @@ function initializeSocketIO(http) {
     function runCountdown() {
         var target_date = new Date().getTime() + (10*1000);
         var seconds, pastSeconds = 0;
-// update the tag with id "countdown" every 1 second
+        // update the tag with id "countdown" every 1 second
         var refresh = setInterval(function () {
 
             // find the amount of "seconds" between now and target
@@ -309,6 +313,7 @@ function initializeSocketIO(http) {
                 client.socket.emit(NetworkIds.CONNECT_OTHER, {
                     userId: newUser.userId,
                     position: newUser.position,
+                    view: newUser.view
                 });
 
                 //
@@ -316,6 +321,7 @@ function initializeSocketIO(http) {
                 socket.emit(NetworkIds.CONNECT_OTHER, {
                     userId: client.user.userId,
                     position: client.user.position,
+                    view: client.user.view
                 });
             }
         }
@@ -401,10 +407,7 @@ function initializeSocketIO(http) {
 
                 socket.emit(NetworkIds.CONNECT_ACK, {
                     position: newUser.position,
-                    view: {
-                        left: Math.random()*4,
-                        top: Math.random()*4
-                    }
+                    view: newUser.view
                 });
 
                 notifyConnect(socket, newUser);

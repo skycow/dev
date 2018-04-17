@@ -107,7 +107,7 @@ Rocket.graphics = (function() {
     // Draw an image into the local canvas coordinate system.
     //
     //------------------------------------------------------------------
-    function draw(texture, center, size, orientation) {
+    function draw(texture, center, size, orientation, me) {
         context.save();
 
         let localCenter = {
@@ -136,18 +136,20 @@ Rocket.graphics = (function() {
         // sprite.center.y - sprite.height / 2,
         //     sprite.width, sprite.height
 
-        context.globalAlpha = .1;
-        context.beginPath();
-        // context.moveTo(Math.floor((center.x - size.width / 2) * world.size + world.left) + (size.width * world.size/2),
-        //     Math.floor((center.y - size.height / 2) * world.size + world.top) + (size.width * world.size/2));
-        context.arc(Math.floor((center.x - size.width / 2) * world.size + world.left) + (size.width * world.size/2),
-            Math.floor((center.y - size.height / 2) * world.size + world.top) + (size.width * world.size/2),
-            world.size/3, Math.PI*(13/8), Math.PI*(3/8));
-        context.lineTo(Math.floor((center.x - size.width / 2) * world.size + world.left) + (size.width * world.size/2),
-            Math.floor((center.y - size.height / 2) * world.size + world.top) + (size.width * world.size/2));
-        context.fillStyle = 'red';
-        context.fill();
-        context.stroke();
+        if (me){
+            context.globalAlpha = .1;
+            context.beginPath();
+            // context.moveTo(Math.floor((center.x - size.width / 2) * world.size + world.left) + (size.width * world.size/2),
+            //     Math.floor((center.y - size.height / 2) * world.size + world.top) + (size.width * world.size/2));
+            context.arc(Math.floor((center.x - size.width / 2) * world.size + world.left) + (size.width * world.size/2),
+                Math.floor((center.y - size.height / 2) * world.size + world.top) + (size.width * world.size/2),
+                world.size/3, Math.PI*(13/8), Math.PI*(3/8));
+            context.lineTo(Math.floor((center.x - size.width / 2) * world.size + world.left) + (size.width * world.size/2),
+                Math.floor((center.y - size.height / 2) * world.size + world.top) + (size.width * world.size/2));
+            context.fillStyle = 'red';
+            context.fill();
+            context.stroke();
+        }
 
         // context.beginPath();
         // context.arc(Math.floor((center.x - size.width / 2) * world.size + world.left) + (size.width * world.size/2),
@@ -172,7 +174,7 @@ Rocket.graphics = (function() {
         image_map.onload = function () {
             ready = true;
         };
-        image_map.src = 'images/background/MapTest1.png';
+        image_map.src = 'images/background/2000x2000map.png';
 
         that.drawMini = function () {
             if (ready) {

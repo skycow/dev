@@ -14,7 +14,6 @@ Rocket.main = (function(input, logic, graphics, assets) {
 
     function network() {
         socketIO.on(NetworkIds.CONNECT_ACK, data => {
-            console.log('did i get here')
             jobQueue.enqueue({
                 type: NetworkIds.CONNECT_ACK,
                 data: data
@@ -22,9 +21,15 @@ Rocket.main = (function(input, logic, graphics, assets) {
         });
 
         socketIO.on(NetworkIds.CONNECT_OTHER, data => {
-            console.log('did i get there')
             jobQueue.enqueue({
                 type: NetworkIds.CONNECT_OTHER,
+                data: data
+            });
+        });
+
+        socketIO.on(NetworkIds.UPDATE_OTHER, data => {
+            jobQueue.enqueue({
+                type: NetworkIds.UPDATE_OTHER,
                 data: data
             });
         });
@@ -43,6 +48,9 @@ Rocket.main = (function(input, logic, graphics, assets) {
                 case NetworkIds.CONNECT_OTHER:
                     connectPlayerOther(message.data);
                     break;
+                case NetworkIds.UPDATE_OTHER:
+                    updateOthers(message.data);
+                    break;
             }
         }
     }
@@ -55,8 +63,10 @@ Rocket.main = (function(input, logic, graphics, assets) {
     //------------------------------------------------------------------
     function connectPlayerOther(data) {
         let model = logic.OtherPlayer();
-        model.state.position.x = data.position.x;
-        model.state.position.y = data.position.y;
+        model.state.position.x = data.position.x + data.view.left;
+        model.state.position.y = data.position.y + data.view.top;
+        // model.view.left = data.view.left;
+        // model.view.top = data.view.top;
 
         otherUsers[data.userId] = {
             model: model,
@@ -68,6 +78,23 @@ Rocket.main = (function(input, logic, graphics, assets) {
         myPlayer.model.position.x = data.position.x;
         myPlayer.model.position.y = data.position.y;
         background.setViewport(data.view.left, data.view.top);
+    }
+
+    function updateOthers(data) {
+        if (otherUsers.hasOwnProperty(data.clientId)) {
+            let model = otherUsers[data.clientId].model;
+            model.goal.updateWindow = data.updateWindow;
+
+            // model.state.position.x = data.position.x;
+            // model.state.position.y = data.position.y;
+            // model.state.orientation = data.orientation;
+            //
+            model.goal.position.x = data.worldView.x;
+            model.goal.position.y = data.worldView.y;
+            // model.view.top = data.view.top;
+            // model.view.left = data.view.left;
+            model.goal.orientation = data.orientation;
+        }
     }
 
     function shiftView(position, elapsedTime) {
@@ -107,6 +134,9 @@ Rocket.main = (function(input, logic, graphics, assets) {
 
     function update(elapsedTime){
         updateMsgs();
+        for (let index in otherUsers){
+            otherUsers[index].model.update(elapsedTime);
+        }
         shiftView(myPlayer.model.position, elapsedTime);
     }
 
@@ -114,14 +144,28 @@ Rocket.main = (function(input, logic, graphics, assets) {
         keyboard.update(elapsedTime);
     }
 
+    function otherPlayers(other){
+        if (other.model.state.position.x - background.viewport.left < 1 &&
+            other.model.state.position.y - background.viewport.top < 1 &&
+            other.model.state.position.x - background.viewport.left > 0 &&
+            other.model.state.position.y - background.viewport.top > 0){
+            let position = {
+                y: other.model.state.position.y - background.viewport.top,
+                x: other.model.state.position.x - background.viewport.left
+            };
+
+            graphics.draw(other.texture, position,
+                other.model.size, other.model.state.orientation, false)
+        }
+    }
+
     function render(){
         graphics.clear();
         background.render();
         for (let index in otherUsers){
-            graphics.draw(otherUsers[index].texture, otherUsers[index].model.state.position,
-                otherUsers[index].model.size, otherUsers[index].model.direction)
+            otherPlayers(otherUsers[index])
         }
-        graphics.draw(myPlayer.texture, myPlayer.model.position, myPlayer.model.size, myPlayer.model.orientation);
+        graphics.draw(myPlayer.texture, myPlayer.model.position, myPlayer.model.size, myPlayer.model.orientation, true);
         mini.drawMini();
         mini.drawPosition(myPlayer.model.position, background.viewport, background.size);
     }
