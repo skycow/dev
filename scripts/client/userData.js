@@ -117,11 +117,6 @@ Rocket.logic.OtherPlayer = function() {
             y: 0
         }
     };
-    //
-    // let view = {
-    //     top: 0,
-    //     left: 0
-    // };
 
     let goal = {
         orientation: 0,
@@ -135,10 +130,6 @@ Rocket.logic.OtherPlayer = function() {
     Object.defineProperty(that, 'state', {
         get: () => state
     });
-
-    // Object.defineProperty(that, 'view', {
-    //     get: () => view
-    // });
 
     Object.defineProperty(that, 'goal', {
         get: () => goal
@@ -166,6 +157,48 @@ Rocket.logic.OtherPlayer = function() {
 
             state.position.x -= (state.position.x - goal.position.x) * updateFraction;
             state.position.y -= (state.position.y - goal.position.y) * updateFraction;
+        }
+    };
+
+    return that;
+};
+
+Rocket.logic.Missile = function(spec) {
+    let that = {};
+
+    Object.defineProperty(that, 'position', {
+        get: () => spec.position
+    });
+
+    Object.defineProperty(that, 'radius', {
+        get: () => spec.radius
+    });
+
+    Object.defineProperty(that, 'id', {
+        get: () => spec.id
+    });
+
+    //------------------------------------------------------------------
+    //
+    // Update the position of the missle.  We don't receive updates from
+    // the server, because the missile moves in a straight line until it
+    // explodes.
+    //
+    //------------------------------------------------------------------
+    that.update = function(elapsedTime) {
+        let vectorX = Math.cos(spec.direction);
+        let vectorY = Math.sin(spec.direction);
+
+        spec.speed *= spec.acceleration;
+        spec.position.x += ((vectorX*1.5) * (elapsedTime/1000) * spec.speed);
+        spec.position.y += ((vectorY*1.5) * (elapsedTime/1000) * spec.speed);
+
+        spec.timeRemaining -= elapsedTime;
+
+        if (spec.timeRemaining <= 0) {
+            return false;
+        } else {
+            return true;
         }
     };
 

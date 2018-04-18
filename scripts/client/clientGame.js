@@ -10,7 +10,8 @@ Rocket.main = (function(input, logic, graphics, assets) {
         background = null,
         mini = graphics.miniMap(),
         jobQueue = logic.createQueue(),
-        otherUsers = [];
+        otherUsers = [],
+        missiles = {};
 
     function network() {
         socketIO.on(NetworkIds.CONNECT_ACK, data => {
@@ -33,6 +34,28 @@ Rocket.main = (function(input, logic, graphics, assets) {
                 data: data
             });
         });
+
+        socketIO.on(NetworkIds.MISSILE_NEW, data => {
+            jobQueue.enqueue({
+                type: NetworkIds.MISSILE_NEW,
+                data: data
+            });
+        });
+    }
+
+    function missileNew(data) {
+        missiles[data.id] = logic.Missile({
+            id: data.id,
+            radius: data.radius,
+            speed: data.speed,
+            acceleration: data.acceleration,
+            direction: data.direction,
+            position: {
+                x: data.position.x,
+                y: data.position.y
+            },
+            timeRemaining: data.timeRemaining
+        });
     }
 
     function updateMsgs(){
@@ -51,22 +74,17 @@ Rocket.main = (function(input, logic, graphics, assets) {
                 case NetworkIds.UPDATE_OTHER:
                     updateOthers(message.data);
                     break;
+                case NetworkIds.MISSILE_NEW:
+                    missileNew(message.data);
+                    break;
             }
         }
     }
 
-    //------------------------------------------------------------------
-    //
-    // Handler for when a new player connects to the game.  We receive
-    // the state of the newly connected player model.
-    //
-    //------------------------------------------------------------------
     function connectPlayerOther(data) {
         let model = logic.OtherPlayer();
         model.state.position.x = data.position.x + data.view.left;
         model.state.position.y = data.position.y + data.view.top;
-        // model.view.left = data.view.left;
-        // model.view.top = data.view.top;
 
         otherUsers[data.userId] = {
             model: model,
@@ -85,14 +103,9 @@ Rocket.main = (function(input, logic, graphics, assets) {
             let model = otherUsers[data.clientId].model;
             model.goal.updateWindow = data.updateWindow;
 
-            // model.state.position.x = data.position.x;
-            // model.state.position.y = data.position.y;
-            // model.state.orientation = data.orientation;
-            //
             model.goal.position.x = data.worldView.x;
             model.goal.position.y = data.worldView.y;
-            // model.view.top = data.view.top;
-            // model.view.left = data.view.left;
+
             model.goal.orientation = data.orientation;
         }
     }
@@ -137,6 +150,17 @@ Rocket.main = (function(input, logic, graphics, assets) {
         for (let index in otherUsers){
             otherUsers[index].model.update(elapsedTime);
         }
+        let removeMissiles = [];
+        for (let missile in missiles) {
+            if (!missiles[missile].update(elapsedTime)) {
+                removeMissiles.push(missiles[missile]);
+            }
+        }
+
+        for (let missile = 0; missile < removeMissiles.length; missile++) {
+            delete missiles[removeMissiles[missile].id];
+        }
+
         shiftView(myPlayer.model.position, elapsedTime);
     }
 
@@ -144,26 +168,35 @@ Rocket.main = (function(input, logic, graphics, assets) {
         keyboard.update(elapsedTime);
     }
 
-    function otherPlayers(other){
-        if (other.model.state.position.x - background.viewport.left < 1 &&
-            other.model.state.position.y - background.viewport.top < 1 &&
-            other.model.state.position.x - background.viewport.left > 0 &&
-            other.model.state.position.y - background.viewport.top > 0){
-            let position = {
-                y: other.model.state.position.y - background.viewport.top,
-                x: other.model.state.position.x - background.viewport.left
+    function drawObjects(object){
+        if (object.position.x - background.viewport.left < 1 &&
+            object.position.y - background.viewport.top < 1 &&
+            object.position.x - background.viewport.left > 0 &&
+            object.position.y - background.viewport.top > 0){
+            return {
+                y: object.position.y - background.viewport.top,
+                x: object.position.x - background.viewport.left
             };
-
-            graphics.draw(other.texture, position,
-                other.model.size, other.model.state.orientation, false)
         }
+        return false;
     }
 
     function render(){
         graphics.clear();
         background.render();
         for (let index in otherUsers){
-            otherPlayers(otherUsers[index])
+            let object = otherUsers[index].model.state;
+            let position = drawObjects(object);
+            if (position.hasOwnProperty('x')){
+                graphics.draw(otherUsers[index].texture, position,
+                    otherUsers[index].model.size, object.orientation, false)
+            }
+        }
+        for (let missile in missiles){
+            let position = drawObjects(missiles[missile]);
+            if (position.hasOwnProperty('x')){
+                graphics.drawMissile(position, missiles[missile].radius, 'black');
+            }
         }
         graphics.draw(myPlayer.texture, myPlayer.model.position, myPlayer.model.size, myPlayer.model.orientation, true);
         mini.drawMini();

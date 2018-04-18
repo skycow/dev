@@ -68,22 +68,30 @@ function makePlayer() {
 
     that.moveUp = function(elapsedTime) {
         reportUpdate = true;
-        worldView.y -= speed * (elapsedTime / 1000);
+        if (worldView.y - speed * (elapsedTime / 1000) > (1/3)){
+            worldView.y -= speed * (elapsedTime / 1000);
+        }
     };
 
     that.moveDown = function(elapsedTime) {
         reportUpdate = true;
-        worldView.y += speed * (elapsedTime / 1000);
+        if (worldView.y + speed * (elapsedTime / 1000) < 5 - (1/3)) {
+            worldView.y += speed * (elapsedTime / 1000);
+        }
     };
 
     that.moveLeft = function(elapsedTime) {
         reportUpdate = true;
-        worldView.x -= speed * (elapsedTime / 1000);
+        if (worldView.x - speed * (elapsedTime / 1000) > (1/3)) {
+            worldView.x -= speed * (elapsedTime / 1000);
+        }
     };
 
     that.moveRight = function(elapsedTime) {
         reportUpdate = true;
-        worldView.x += speed * (elapsedTime / 1000);
+        if (worldView.x + speed * (elapsedTime / 1000) < 5 - (1/3)) {
+            worldView.x += speed * (elapsedTime / 1000);
+        }
     };
 
     that.rotateRight = function(elapsedTime) {

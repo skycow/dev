@@ -8,46 +8,34 @@ let activeUsers = [];
 let present = require('present');
 let User = require('./userData');
 let NetworkIds = require('../persistant/network-ids');
-// let Missile = require('./missile');
-let Queue = require('../persistant/queue');
+let Missile = require('./missile');
 
+let Queue = require('../persistant/queue');
 const SIMULATION_UPDATE_RATE_MS = 50;
 const STATE_UPDATE_RATE_MS = 100;
 let lastUpdate = 0;
 let quit = false;
-let activeClients = {};
 let newMissiles = [];
 let activeMissiles = [];
 let hits = [];
 let inputQueue = Queue.create();
-// let nextMissileId = 1;
-//
-// //------------------------------------------------------------------
-// //
-// // Used to create a missile in response to user input.
-// //
-// //------------------------------------------------------------------
-// function createMissile(clientId, playerModel) {
-//     let missile = Missile.create({
-//         id: nextMissileId++,
-//         clientId: clientId,
-//         position: {
-//             x: playerModel.position.x,
-//             y: playerModel.position.y
-//         },
-//         direction: playerModel.direction,
-//         speed: playerModel.speed
-//     });
-//
-//     newMissiles.push(missile);
-// }
-//
-//------------------------------------------------------------------
-//
-// Process the network inputs we have received since the last time
-// the game loop was processed.
-//
-//------------------------------------------------------------------
+let nextMissileId = 1;
+
+function createMissile(userId, user) {
+    let missile = Missile.create({
+        id: nextMissileId++,
+        userId: userId,
+        position: {
+            x: user.worldView.x,
+            y: user.worldView.y
+        },
+        direction: user.orientation,
+        speed: user.speed
+    });
+
+    newMissiles.push(missile);
+}
+
 function processInput(elapsedTime) {
     //
     // Double buffering on the queue so we don't asynchronously receive inputs
@@ -81,10 +69,9 @@ function processInput(elapsedTime) {
             case NetworkIds.INPUT_FLIP:
                 client.user.flipIt(input.message.elapsedTime);
                 break;
-
-            // case NetworkIds.INPUT_FIRE:
-            //     createMissile(input.clientId, client.player);
-            //     break;
+            case NetworkIds.INPUT_FIRE:
+                createMissile(input.message.userId, client.user);
+                break;
         }
     }
 }
@@ -112,20 +99,18 @@ function update(elapsedTime, currentTime) {
         activeUsers[clientId].user.update(currentTime);
     }
 
-    // for (let missile = 0; missile < newMissiles.length; missile++) {
-    //     newMissiles[missile].update(elapsedTime);
-    // }
-    //
-    // let keepMissiles = [];
-    // for (let missile = 0; missile < activeMissiles.length; missile++) {
-    //     //
-    //     // If update returns false, that means the missile lifetime ended and
-    //     // we don't keep it around any longer.
-    //     if (activeMissiles[missile].update(elapsedTime)) {
-    //         keepMissiles.push(activeMissiles[missile]);
-    //     }
-    // }
-    // activeMissiles = keepMissiles;
+    for (let missile = 0; missile < newMissiles.length; missile++) {
+        newMissiles[missile].update(elapsedTime);
+    }
+
+    let keepMissiles = [];
+    for (let missile = 0; missile < activeMissiles.length; missile++) {
+
+        if (activeMissiles[missile].update(elapsedTime)) {
+            keepMissiles.push(activeMissiles[missile]);
+        }
+    }
+    activeMissiles = keepMissiles;
 
     //
     // Check to see if any missiles collide with any players (no friendly fire)
@@ -153,11 +138,13 @@ function update(elapsedTime, currentTime) {
     // activeMissiles = keepMissiles;
 }
 
-//------------------------------------------------------------------
-//
-// Send state of the game to any connected clients.
-//
-//------------------------------------------------------------------
+function sameArea(object1, object2){
+    if (Math.abs(object1.worldView.x - object2.worldView.x) < .6 &&
+        Math.abs(object1.worldView.y - object2.worldView.y) < .6){
+        return true;
+    }
+}
+
 function updateClients(elapsedTime) {
     //
     // For demonstration purposes, network updates run at a slower rate than
@@ -167,30 +154,28 @@ function updateClients(elapsedTime) {
         return;
     }
 
-    // //
-    // // Build the missile messages one time, then reuse inside the loop
-    // let missileMessages = [];
-    // for (let item = 0; item < newMissiles.length; item++) {
-    //     let missile = newMissiles[item];
-    //     missileMessages.push({
-    //         id: missile.id,
-    //         direction: missile.direction,
-    //         position: {
-    //             x: missile.position.x,
-    //             y: missile.position.y
-    //         },
-    //         radius: missile.radius,
-    //         speed: missile.speed,
-    //         timeRemaining: missile.timeRemaining
-    //     });
-    // }
-    //
-    // //
-    // // Move all the new missiles over to the active missiles array
-    // for (let missile = 0; missile < newMissiles.length; missile++) {
-    //     activeMissiles.push(newMissiles[missile]);
-    // }
-    // newMissiles.length = 0;
+    let missileMessages = [];
+    for (let item = 0; item < newMissiles.length; item++) {
+        let missile = newMissiles[item];
+        missileMessages.push({
+            id: missile.id,
+            direction: missile.direction,
+            position: {
+                x: missile.position.x,
+                y: missile.position.y
+            },
+            radius: missile.radius,
+            speed: .1,
+            acceleration: missile.acceleration,
+            timeRemaining: missile.timeRemaining
+        });
+    }
+
+    // Move all the new missiles over to the active missiles array
+    for (let missile = 0; missile < newMissiles.length; missile++) {
+        activeMissiles.push(newMissiles[missile]);
+    }
+    newMissiles.length = 0;
 
     for (let clientId in activeUsers) {
         let client = activeUsers[clientId];
@@ -199,30 +184,22 @@ function updateClients(elapsedTime) {
             lastMessageId: client.lastMessageId,
             orientation: client.user.orientation,
             worldView: client.user.worldView,
-            // position: client.user.position,
-            // view: client.user.view,
             updateWindow: lastUpdate
         };
         if (client.user.reportUpdate) {
             client.socket.emit(NetworkIds.UPDATE_SELF, update);
 
-            //
-            // Notify all other connected clients about every
-            // other connected client status...but only if they are updated.
             for (let otherId in activeUsers) {
-                if (otherId !== clientId) {
+                if (otherId !== clientId && sameArea(client.user, activeUsers[otherId].user)) {
                     activeUsers[otherId].socket.emit(NetworkIds.UPDATE_OTHER, update);
                 }
             }
         }
-        //
-        // //
-        // // Report any new missiles to the active clients
-        // for (let missile = 0; missile < missileMessages.length; missile++) {
-        //     client.socket.emit(NetworkIds.MISSILE_NEW, missileMessages[missile]);
-        // }
-        //
-        // //
+
+        for (let missile = 0; missile < missileMessages.length; missile++) {
+            client.socket.emit(NetworkIds.MISSILE_NEW, missileMessages[missile]);
+        }
+
         // // Report any missile hits to this client
         // for (let hit = 0; hit < hits.length; hit++) {
         //     client.socket.emit(NetworkIds.MISSILE_HIT, hits[hit]);
@@ -233,12 +210,7 @@ function updateClients(elapsedTime) {
         activeUsers[clientId].user.reportUpdate = false;
     }
 
-    //
-    // Don't need these anymore, clean up
     hits.length = 0;
-    //
-    // Reset the elapsed time since last update so we can know
-    // when to put out the next update.
     lastUpdate = 0;
 }
 
@@ -272,7 +244,6 @@ function initializeSocketIO(http) {
 
     var io = require('socket.io')(http);
 
-    //my func
     function runCountdown() {
         var target_date = new Date().getTime() + (10*1000);
         var seconds, pastSeconds = 0;
@@ -295,20 +266,11 @@ function initializeSocketIO(http) {
             }
         }, 1000);
     }
-    //my func done
-    //
-    // ------------------------------------------------------------------
-    //
-    // Notifies the already connected clients about the arrival of this
-    // new client.  Plus, tell the newly connected client about the
-    // other players already connected.
-    //
-    // ------------------------------------------------------------------
+
     function notifyConnect(socket, newUser) {
         for (let clientId in activeUsers) {
             let client = activeUsers[clientId];
             if (newUser.userId !== clientId) {
-                //
                 // Tell existing about the newly connected player
                 client.socket.emit(NetworkIds.CONNECT_OTHER, {
                     userId: newUser.userId,
@@ -316,7 +278,6 @@ function initializeSocketIO(http) {
                     view: newUser.view
                 });
 
-                //
                 // Tell the new player about the already connected player
                 socket.emit(NetworkIds.CONNECT_OTHER, {
                     userId: client.user.userId,
@@ -326,59 +287,6 @@ function initializeSocketIO(http) {
             }
         }
     }
-
-    // //------------------------------------------------------------------
-    // //
-    // // Notifies the already connected clients about the disconnect of
-    // // another client.
-    // //
-    // //------------------------------------------------------------------
-    // function notifyDisconnect(playerId) {
-    //     for (let clientId in activeClients) {
-    //         let client = activeClients[clientId];
-    //         if (playerId !== clientId) {
-    //             client.socket.emit(NetworkIds.DISCONNECT_OTHER, {
-    //                 clientId: playerId
-    //             });
-    //         }
-    //     }
-    // }
-
-    // io.on('connection', function(socket) {
-    //     console.log('Connection established: ', socket.id);
-    //     //
-    //     // Create an entry in our list of connected clients
-    //     let newPlayer = Player.create()
-    //     newPlayer.clientId = socket.id;
-    //     activeClients[socket.id] = {
-    //         socket: socket,
-    //         player: newPlayer
-    //     };
-    //     socket.emit(NetworkIds.CONNECT_ACK, {
-    //         direction: newPlayer.direction,
-    //         position: newPlayer.position,
-    //         size: newPlayer.size,
-    //         rotateRate: newPlayer.rotateRate,
-    //         speed: newPlayer.speed
-    //     });
-    //
-    //     socket.on(NetworkIds.INPUT, data => {
-    //         inputQueue.enqueue({
-    //             clientId: socket.id,
-    //             message: data
-    //         });
-    //     });
-    //
-    //     socket.on('disconnect', function() {
-    //         delete activeClients[socket.id];
-    //         // notifyDisconnect(socket.id);
-    //     });
-    //
-    //     // notifyConnect(socket, newPlayer);
-    // });
-
-
-    ////ours
 
     io.on('connection', function(socket){
         socket.on('join', function(data){
@@ -423,10 +331,6 @@ function initializeSocketIO(http) {
                 io.emit('chat message', data.name + ": " + msg);
             });
 
-            // socket.on('input', (keyInput) => {
-            //     console.log(data.name + ':: ' + keyInput);
-            // });
-
             socket.on(NetworkIds.INPUT, keyInput => {
                 inputQueue.enqueue({
                     clientId: socket.id,
@@ -436,6 +340,8 @@ function initializeSocketIO(http) {
             });
 
             socket.on('disconnect', function(){
+                // notifyDisconnect(socket.id);
+                //delete activeClients[socket.id];
                 connections--;
                 console.log(data.name + ' with id ' + socket.id + ' disconnected');
                 io.emit('chat message', data.name + ' has left the game');
@@ -445,11 +351,6 @@ function initializeSocketIO(http) {
     });
 }
 
-//------------------------------------------------------------------
-//
-// Entry point to get the game started.
-//
-//------------------------------------------------------------------
 function initialize(http) {
     initializeSocketIO(http);
     gameLoop(present(), 0);

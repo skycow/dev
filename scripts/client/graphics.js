@@ -151,17 +151,6 @@ Rocket.graphics = (function() {
             context.stroke();
         }
 
-        // context.beginPath();
-        // context.arc(Math.floor((center.x - size.width / 2) * world.size + world.left) + (size.width * world.size/2),
-        //     Math.floor((center.y - size.height / 2) * world.size + world.top) + (size.width * world.size/2),
-        //     world.size/3, Math.PI*(3/8), Math.PI*(13/8), true);
-        // context.lineTo(Math.floor((center.x - size.width / 2) * world.size + world.left) + (size.width * world.size/2),
-        //     Math.floor((center.y - size.height / 2) * world.size + world.top) + (size.width * world.size/2));
-        // context.fillStyle = 'red';
-        // context.fill();
-        // context.stroke();
-
-
         context.restore();
 
     }
@@ -210,6 +199,16 @@ Rocket.graphics = (function() {
     function createImage(location) {
         images[location] = new Image();
         images[location].src = 'images/' + location;
+    }
+
+    function drawMissile(center, radius, color) {
+        context.beginPath();
+        context.arc(Math.floor(center.x * world.size + world.left),
+            Math.floor(center.y * world.size + world.top),
+            2 * radius * world.size, 2 * Math.PI, false);
+        context.closePath();
+        context.fillStyle = color;
+        context.fill();
     }
 
     function TiledImage(spec) {
@@ -344,6 +343,7 @@ Rocket.graphics = (function() {
         createImage: createImage,
         TiledImage: TiledImage,
         initGraphics: initGraphics,
-        miniMap: miniMap
+        miniMap: miniMap,
+        drawMissile: drawMissile
     };
 }());
