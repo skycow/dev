@@ -41,6 +41,13 @@ Rocket.main = (function(input, logic, graphics, assets) {
                 data: data
             });
         });
+
+        socketIO.on(NetworkIds.MISSILE_HIT, data => {
+            jobQueue.enqueue({
+                type: NetworkIds.MISSILE_HIT,
+                data: data
+            });
+        });
     }
 
     function missileNew(data) {
@@ -63,7 +70,6 @@ Rocket.main = (function(input, logic, graphics, assets) {
         jobQueue = jobQueue = logic.createQueue();
         while (!processMe.empty) {
             let message = processMe.dequeue();
-            console.log('message received: ' + message);
             switch (message.type) {
                 case NetworkIds.CONNECT_ACK:
                     connectPlayerSelf(message.data);
@@ -76,6 +82,9 @@ Rocket.main = (function(input, logic, graphics, assets) {
                     break;
                 case NetworkIds.MISSILE_NEW:
                     missileNew(message.data);
+                    break;
+                case NetworkIds.MISSILE_HIT:
+                    console.log('Put missile hit code here');
                     break;
             }
         }

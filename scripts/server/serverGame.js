@@ -78,16 +78,16 @@ function processInput(elapsedTime) {
 
 //------------------------------------------------------------------
 //
-// // Utility function to perform a hit test between two objects.  The
-// // objects must have a position: { x: , y: } property and radius property.
-// //
-// //------------------------------------------------------------------
-// function collided(obj1, obj2) {
-//     let distance = Math.sqrt(Math.pow(obj1.position.x - obj2.position.x, 2) + Math.pow(obj1.position.y - obj2.position.y, 2));
-//     let radii = obj1.radius + obj2.radius;
+// Utility function to perform a hit test between two objects.  The
+// objects must have a position: { x: , y: } property and radius property.
 //
-//     return distance <= radii;
-// }
+//------------------------------------------------------------------
+function collided(obj1, obj2) {
+    let distance = Math.sqrt(Math.pow(obj1.position.x - obj2.position.x, 2) + Math.pow(obj1.position.y - obj2.position.y, 2));
+    let radii = obj1.radius + obj2.radius;
+
+    return distance <= radii;
+}
 
 //------------------------------------------------------------------
 //
@@ -112,30 +112,31 @@ function update(elapsedTime, currentTime) {
     }
     activeMissiles = keepMissiles;
 
-    //
+
     // Check to see if any missiles collide with any players (no friendly fire)
-    // keepMissiles = [];
-    // for (let missile = 0; missile < activeMissiles.length; missile++) {
-    //     let hit = false;
-    //     for (let clientId in activeClients) {
-    //         //
-    //         // Don't allow a missile to hit the player it was fired from.
-    //         if (clientId !== activeMissiles[missile].clientId) {
-    //             if (collided(activeMissiles[missile], activeClients[clientId].player)) {
-    //                 hit = true;
-    //                 hits.push({
-    //                     clientId: clientId,
-    //                     missileId: activeMissiles[missile].id,
-    //                     position: activeClients[clientId].player.position
-    //                 });
-    //             }
-    //         }
-    //     }
-    //     if (!hit) {
-    //         keepMissiles.push(activeMissiles[missile]);
-    //     }
-    // }
-    // activeMissiles = keepMissiles;
+    keepMissiles = [];
+    for (let missile = 0; missile < activeMissiles.length; missile++) {
+        let hit = false;
+        for (let clientId in activeUsers) {
+            //
+            // Don't allow a missile to hit the player it was fired from.
+            if (clientId !== activeMissiles[missile].userId) {
+                if (collided(activeMissiles[missile], activeUsers[clientId].user)) {
+                    hit = true;
+                    hits.push({
+                        userId: clientId,
+                        missileId: activeMissiles[missile].id,
+                        position: activeUsers[clientId].userId.position,
+                        signature: activeMissiles[missile].userId
+                    });
+                }
+            }
+        }
+        if (!hit) {
+            keepMissiles.push(activeMissiles[missile]);
+        }
+    }
+    activeMissiles = keepMissiles;
 }
 
 function sameArea(object1, object2){
@@ -200,10 +201,10 @@ function updateClients(elapsedTime) {
             client.socket.emit(NetworkIds.MISSILE_NEW, missileMessages[missile]);
         }
 
-        // // Report any missile hits to this client
-        // for (let hit = 0; hit < hits.length; hit++) {
-        //     client.socket.emit(NetworkIds.MISSILE_HIT, hits[hit]);
-        // }
+        // Report any missile hits to this client
+        for (let hit = 0; hit < hits.length; hit++) {
+            client.socket.emit(NetworkIds.MISSILE_HIT, hits[hit]);
+        }
     }
 
     for (let clientId in activeUsers) {
