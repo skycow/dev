@@ -4,15 +4,11 @@ let express = require('express');
 let sqlite = require('sqlite3');
 let fs = require('fs');
 let path=require('path');
+let game_server_side = require('./scripts/server/serverGame');
 var bodyParser = require('body-parser');
-let connections = 0;
-let TARGET_USERS_NUM = 1;
-let game_started = false;
-let activeUsers = [];
 
 let app = express();
 let http = require('http').Server(app);
-var io = require('socket.io')(http);
 
 let mimeTypes = {
   '.js' : 'text/javascript',
@@ -38,7 +34,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 app.use('/css',express.static(path.join(__dirname,'css')));
-app.use('/scripts',express.static(path.join(__dirname,'scripts')));
+app.use('/scripts/client',express.static(path.join(__dirname,'scripts/client')));
+app.use('/scripts/persistant',express.static(path.join(__dirname,'scripts/persistant')));
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
 app.get('/', function(request, response){
@@ -102,64 +99,7 @@ app.use('*', function(request, response){
   response.status(404).send("Not found");
 })
 
-function runCountdown() {
-    var target_date = new Date().getTime() + (10*1000);
-    var seconds, pastSeconds = 0;
-// update the tag with id "countdown" every 1 second
-    var refresh = setInterval(function () {
-
-        // find the amount of "seconds" between now and target
-        var current_date = new Date().getTime();
-        var seconds_left = (target_date - current_date + 1) / 1000;
-        seconds = parseInt(seconds_left % 60);
-
-        if (pastSeconds !== seconds) {
-            io.emit('start game', seconds.toString());
-            pastSeconds = seconds;
-        }
-        if (seconds === 0){
-            io.emit('start game', 'countdown finished');
-            clearInterval(refresh);
-        }
-    }, 1000);
-}
-
-io.on('connection', function(socket){
-  socket.on('join', function(data){
-    console.log(data.name + ' with id ' + socket.id + ' connected');
-    if(game_started) {
-      if(typeof activeUsers[data.name] !== 'undefined') {
-          activeUsers[data.name] = socket.id;
-          io.sockets.sockets[socket.id].emit('start game', "player reconnect"); io.emit('chat message',data.name + ' has rejoined the game.');
-      } else {
-        io.emit('chat message', "Game already in progress.")
-      }
-    } else {
-      io.emit('chat message',data.name + ' has joined the game.');
-      activeUsers[data.name] = socket.id;
-      connections++;
-      if (connections >= TARGET_USERS_NUM) {
-        if (!game_started) runCountdown();
-        game_started = true;
-      }
-    }
-
-    socket.on('chat message', function(msg){
-      io.emit('chat message', data.name + ": " + msg);
-    });
-
-    socket.on('input', (keyInput) => {
-      console.log(data.name + ': ' + keyInput);
-    });
-
-    socket.on('disconnect', function(){
-        connections--;
-        console.log(data.name + ' with id ' + socket.id + ' disconnected');
-        io.emit('chat message', data.name + ' has left the game');
-    });
-  });
-});
-
 http.listen(3000, function() {
-  console.log('Server running at http://localhost:3000/');
+    game_server_side.initialize(http);
+    console.log('Server running at http://localhost:3000/');
 });
