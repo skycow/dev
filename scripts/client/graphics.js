@@ -45,6 +45,9 @@ Rocket.graphics = (function() {
     }
 
     function initGraphics() {
+        window.addEventListener('resize', function() {
+            resizeCanvas();
+        }, false);
         resizeCanvas();
     }
 

@@ -262,7 +262,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
             let position = drawObjects(object);
             if (position.hasOwnProperty('x')){
                 graphics.draw(otherUsers[index].texture, position,
-                    otherUsers[index].model.size, object.orientation, false)
+                    otherUsers[index].model.size, otherUsers[index].model.state.orientation, false)
             }
         }
         for (let missile in missiles){
