@@ -56,6 +56,14 @@
             value: 'connect-other',
             writable: false
         },
+        'RECONNECT_OTHER': {
+            value: 'reconnect-other',
+            writable: false
+        },
+        'RECONNECT_SELF': {
+            value: 'reconnect-self',
+            writable: false
+        },
         'DISCONNECT_OTHER': {
             value: 'disconnect-other',
             writable: false
@@ -66,6 +74,10 @@
         },
         'UPDATE_OTHER': {
             value: 'update-other',
+            writable: false
+        },
+        'UPDATE_OTHER_DELETE': {
+            value: 'update-other-delete',
             writable: false
         },
         'MISSILE_NEW': {

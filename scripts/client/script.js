@@ -118,6 +118,7 @@ document.getElementById('button-join').addEventListener('click', function(){
           document.getElementById('id-game').hidden = false;
           document.getElementById('id-chat').hidden = true;
           document.getElementById('h1-id-username').innerHTML = userId;
+          // Rocket.main.reconnect();
         } else {
           document.getElementById('min-players').hidden = false;
           var countdown = document.getElementById('countdown');

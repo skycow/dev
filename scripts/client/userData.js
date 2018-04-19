@@ -155,8 +155,10 @@ Rocket.logic.OtherPlayer = function() {
             // Turn first, then move.
             state.orientation -= (state.orientation - goal.orientation) * updateFraction;
 
-            state.position.x -= (state.position.x - goal.position.x) * updateFraction;
-            state.position.y -= (state.position.y - goal.position.y) * updateFraction;
+            if (state.position.hasOwnProperty('x')){
+                state.position.x -= (state.position.x - goal.position.x) * updateFraction;
+                state.position.y -= (state.position.y - goal.position.y) * updateFraction;
+            }
         }
     };
 
@@ -190,8 +192,8 @@ Rocket.logic.Missile = function(spec) {
         let vectorY = Math.sin(spec.direction);
 
         spec.speed *= spec.acceleration;
-        spec.position.x += ((vectorX*1.5) * (elapsedTime/1000) * spec.speed);
-        spec.position.y += ((vectorY*1.5) * (elapsedTime/1000) * spec.speed);
+        spec.position.x += ((vectorX/Math.cos(Math.PI/4)) * (elapsedTime/1000) * spec.speed);
+        spec.position.y += ((vectorY/Math.cos(Math.PI/4)) * (elapsedTime/1000) * spec.speed);
 
         spec.timeRemaining -= elapsedTime;
 

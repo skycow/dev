@@ -142,8 +142,12 @@ function update(elapsedTime, currentTime) {
 function sameArea(object1, object2){
     if (Math.abs(object1.worldView.x - object2.worldView.x) < .6 &&
         Math.abs(object1.worldView.y - object2.worldView.y) < .6){
-        return true;
+        return 0;
+    } else if (Math.abs(object1.worldView.x - object2.worldView.x) < .7 &&
+        Math.abs(object1.worldView.y - object2.worldView.y) < .7){
+        return 1;
     }
+    return 2;
 }
 
 function updateClients(elapsedTime) {
@@ -166,7 +170,7 @@ function updateClients(elapsedTime) {
                 y: missile.position.y
             },
             radius: missile.radius,
-            speed: .1,
+            speed: missile.speed,
             acceleration: missile.acceleration,
             timeRemaining: missile.timeRemaining
         });
@@ -189,11 +193,14 @@ function updateClients(elapsedTime) {
         };
         if (client.user.reportUpdate) {
             client.socket.emit(NetworkIds.UPDATE_SELF, update);
+        }
 
-            for (let otherId in activeUsers) {
-                if (otherId !== clientId && sameArea(client.user, activeUsers[otherId].user)) {
-                    activeUsers[otherId].socket.emit(NetworkIds.UPDATE_OTHER, update);
-                }
+        for (let otherId in activeUsers) {
+            let inBoundary = sameArea(client.user, activeUsers[otherId].user);
+            if (otherId !== clientId && !inBoundary) {
+                activeUsers[otherId].socket.emit(NetworkIds.UPDATE_OTHER, update);
+            } else if (otherId !== clientId && inBoundary === 1) {
+                activeUsers[otherId].socket.emit(NetworkIds.UPDATE_OTHER_DELETE, update);
             }
         }
 
@@ -276,14 +283,49 @@ function initializeSocketIO(http) {
                 client.socket.emit(NetworkIds.CONNECT_OTHER, {
                     userId: newUser.userId,
                     position: newUser.position,
-                    view: newUser.view
+                    view: newUser.view,
+                    orientation: newUser.orientation,
                 });
 
                 // Tell the new player about the already connected player
                 socket.emit(NetworkIds.CONNECT_OTHER, {
                     userId: client.user.userId,
                     position: client.user.position,
-                    view: client.user.view
+                    view: client.user.view,
+                    orientation: client.user.orientation,
+                });
+            }
+        }
+    }
+
+    function notifyReconnect(socket, newUser) {
+        activeUsers[newUser.userId].socket.emit(NetworkIds.RECONNECT_SELF, {
+            clientId: newUser.clientId,
+            lastMessageId: activeUsers[newUser.userId].lastMessageId,
+            orientation: activeUsers[newUser.userId].user.orientation,
+            worldView: activeUsers[newUser.userId].user.worldView,
+            userId: newUser.userId
+        });
+
+        for (let clientId in activeUsers) {
+            let client = activeUsers[clientId];
+            if (newUser.userId !== clientId) {
+                // Tell existing about the newly connected player
+                client.socket.emit(NetworkIds.RECONNECT_OTHER, {
+                    clientId: newUser.clientId,
+                    lastMessageId: newUser.lastMessageId,
+                    orientation: newUser.orientation,
+                    worldView: newUser.worldView,
+                    userId: newUser.userId
+                });
+
+                // Tell the new player about the already connected player
+                socket.emit(NetworkIds.RECONNECT_OTHER, {
+                    clientId: clientId,
+                    lastMessageId: client.lastMessageId,
+                    orientation: client.user.orientation,
+                    worldView: client.user.worldView,
+                    userId: client.user.userId
                 });
             }
         }
@@ -297,7 +339,7 @@ function initializeSocketIO(http) {
                     activeUsers[data.name].socket = socket;
                     activeUsers[data.name].id = socket.id;
                     activeUsers[data.name].user.clientId = socket.id;
-
+                    notifyReconnect(socket, activeUsers[data.name].user);
                     io.sockets.sockets[socket.id].emit('start game', "player reconnect");
                     io.emit('chat message',data.name + ' has rejoined the game.');
                 } else {

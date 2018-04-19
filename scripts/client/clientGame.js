@@ -28,9 +28,30 @@ Rocket.main = (function(input, logic, graphics, assets) {
             });
         });
 
+        socketIO.on(NetworkIds.RECONNECT_SELF, data => {
+            jobQueue.enqueue({
+                type: NetworkIds.RECONNECT_SELF,
+                data: data
+            });
+        });
+
+        socketIO.on(NetworkIds.RECONNECT_OTHER, data => {
+            jobQueue.enqueue({
+                type: NetworkIds.RECONNECT_OTHER,
+                data: data
+            });
+        });
+
         socketIO.on(NetworkIds.UPDATE_OTHER, data => {
             jobQueue.enqueue({
                 type: NetworkIds.UPDATE_OTHER,
+                data: data
+            });
+        });
+
+        socketIO.on(NetworkIds.UPDATE_OTHER_DELETE, data => {
+            jobQueue.enqueue({
+                type: NetworkIds.UPDATE_OTHER_DELETE,
                 data: data
             });
         });
@@ -77,8 +98,17 @@ Rocket.main = (function(input, logic, graphics, assets) {
                 case NetworkIds.CONNECT_OTHER:
                     connectPlayerOther(message.data);
                     break;
+                case NetworkIds.RECONNECT_SELF:
+                    reconnectPlayerSelf(message.data);
+                    break;
+                case NetworkIds.RECONNECT_OTHER:
+                    reconnectPlayerOther(message.data);
+                    break;
                 case NetworkIds.UPDATE_OTHER:
                     updateOthers(message.data);
+                    break;
+                case NetworkIds.UPDATE_OTHER_DELETE:
+                    untrack(message.data);
                     break;
                 case NetworkIds.MISSILE_NEW:
                     missileNew(message.data);
@@ -92,13 +122,30 @@ Rocket.main = (function(input, logic, graphics, assets) {
 
     function connectPlayerOther(data) {
         let model = logic.OtherPlayer();
-        model.state.position.x = data.position.x + data.view.left;
-        model.state.position.y = data.position.y + data.view.top;
+        // model.state.position.x = data.position.x + data.view.left;
+        // model.state.position.y = data.position.y + data.view.top;
 
         otherUsers[data.userId] = {
             model: model,
             texture: 'playerShip1_blue.png'
         };
+    }
+
+    function reconnectPlayerOther(data) {
+        let model = logic.OtherPlayer();
+        model.state.orientation = data.orientation;
+
+        otherUsers[data.userId] = {
+            model: model,
+            texture: 'playerShip1_blue.png'
+        };
+    }
+
+    function reconnectPlayerSelf(data) {
+        myPlayer.model.position.x = .5;
+        myPlayer.model.position.y = .5;
+        myPlayer.model.orientation = data.orientation;
+        background.setViewport(data.worldView.x - .5, data.worldView.y - .5);
     }
 
     function connectPlayerSelf(data) {
@@ -107,14 +154,30 @@ Rocket.main = (function(input, logic, graphics, assets) {
         background.setViewport(data.view.left, data.view.top);
     }
 
+    function untrack(data) {
+        if (otherUsers.hasOwnProperty(data.clientId)) {
+            let model = otherUsers[data.clientId].model;
+            delete model.state.position.x;
+            delete model.state.position.y;
+        }
+    }
+
     function updateOthers(data) {
         if (otherUsers.hasOwnProperty(data.clientId)) {
             let model = otherUsers[data.clientId].model;
             model.goal.updateWindow = data.updateWindow;
 
+            if (!model.state.position.hasOwnProperty('x')){
+                model.state.position.x = data.worldView.x;
+                model.state.position.y = data.worldView.y;
+                console.log(model.state.position);
+                console.log('inside');
+            }
+            console.log(model.state.position);
+            console.log('outside');
             model.goal.position.x = data.worldView.x;
-            model.goal.position.y = data.worldView.y;
 
+            model.goal.position.y = data.worldView.y;
             model.goal.orientation = data.orientation;
         }
     }
@@ -178,13 +241,13 @@ Rocket.main = (function(input, logic, graphics, assets) {
     }
 
     function drawObjects(object){
-        if (object.position.x - background.viewport.left < 1 &&
-            object.position.y - background.viewport.top < 1 &&
-            object.position.x - background.viewport.left > 0 &&
-            object.position.y - background.viewport.top > 0){
+        if (object.x - background.viewport.left < 1 &&
+            object.y - background.viewport.top < 1 &&
+            object.x - background.viewport.left > 0 &&
+            object.y - background.viewport.top > 0){
             return {
-                y: object.position.y - background.viewport.top,
-                x: object.position.x - background.viewport.left
+                y: object.y - background.viewport.top,
+                x: object.x - background.viewport.left
             };
         }
         return false;
@@ -194,7 +257,8 @@ Rocket.main = (function(input, logic, graphics, assets) {
         graphics.clear();
         background.render();
         for (let index in otherUsers){
-            let object = otherUsers[index].model.state;
+            let object = otherUsers[index].model.state.position;
+            if (!object.hasOwnProperty('x')) continue;
             let position = drawObjects(object);
             if (position.hasOwnProperty('x')){
                 graphics.draw(otherUsers[index].texture, position,
@@ -202,7 +266,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
             }
         }
         for (let missile in missiles){
-            let position = drawObjects(missiles[missile]);
+            let position = drawObjects(missiles[missile].position);
             if (position.hasOwnProperty('x')){
                 graphics.drawMissile(position, missiles[missile].radius, 'black');
             }
