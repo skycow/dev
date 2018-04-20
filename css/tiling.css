@@ -1,26 +1,28 @@
 #h1-id-username {
-    z-index: 3;
+    z-index: 5;
     position: absolute;
-    top: 25px;
-    left: 100px;
 }
 
 #field-clock {
-    z-index: 3;
+    z-index: 4;
     position: absolute;
-    top: 325px;
-    left: 100px;
 }
 
 #canvas-mini {
-    background-color: transparent;
-    /*background-image: url('../images/background/MapTest1.png');*/
-    /*background-size: cover;*/
-    z-index: 2;
+    background-color: teal;
+    z-index: 3;
     position: absolute;
     top: 0px;
     left: 0px;
 
+}
+
+#canvas-right {
+    background-color: teal;
+    z-index: 2;
+    position: absolute;
+    top: 0px;
+    /*left: 1006px;*/
 }
 
 #canvas-main {

@@ -6,8 +6,13 @@
 Rocket.graphics = (function() {
     let canvas = document.getElementById('canvas-main');
     let canvas_mini = document.getElementById('canvas-mini');
+    let canvas_right = document.getElementById('canvas-right');
+    let user_name = document.getElementById('h1-id-username');
+    let timer = document.getElementById('field-clock');
+
     let context = canvas.getContext('2d');
-    let context_mini = canvas.getContext('2d');
+    let context_mini = canvas_mini.getContext('2d');
+    let context_right = canvas_right.getContext('2d');
 
     let images = {};
     let world = {
@@ -37,11 +42,17 @@ Rocket.graphics = (function() {
             world.left = (canvas.width - world.size) / 2;
         }
 
-        /*//
-        // Notify interested parties of the canvas resize event.
-        for (handler in resizeHandlers) {
-            resizeHandlers[handler](true);
-        }*/
+        canvas_mini.width = world.left;
+        canvas_mini.height = canvas.height;
+        canvas_right.width = world.left;
+        canvas_right.height = canvas.height;
+        canvas_right.style.left = (world.size + world.left).toString() + "px";
+        user_name.style.left = (canvas_mini.width/100).toString() + "px";
+        timer.style.left = (canvas_mini.width/100).toString() + "px";
+        user_name.style.top = (canvas_mini.width).toString() + "px";
+        user_name.style.fontSize = (canvas_mini.width/6).toString() + "px";
+        timer.style.top = (canvas_mini.width + (canvas_mini.width/6)).toString() + "px";
+        timer.style.fontSize = (canvas_mini.width/6).toString() + "px";
     }
 
     function initGraphics() {
@@ -61,6 +72,7 @@ Rocket.graphics = (function() {
         this.save();
         this.setTransform(1, 0, 0, 1, 0, 0);
         this.clearRect(0, 0, canvas.width, canvas.height);
+        this.clearRect(0, 0, canvas_mini.width, canvas_mini.height);
         this.restore();
     };
 
@@ -71,6 +83,7 @@ Rocket.graphics = (function() {
     //------------------------------------------------------------------
     function clear() {
         context.clear();
+        context_mini.clear();
     }
 
     //------------------------------------------------------------------
@@ -80,6 +93,7 @@ Rocket.graphics = (function() {
     //------------------------------------------------------------------
     function saveContext() {
         context.save();
+        context_mini.save();
     }
 
     //------------------------------------------------------------------
@@ -89,6 +103,7 @@ Rocket.graphics = (function() {
     //------------------------------------------------------------------
     function restoreContext() {
         context.restore();
+        context_mini.restore();
     }
 
     //------------------------------------------------------------------
@@ -174,9 +189,9 @@ Rocket.graphics = (function() {
 
                 context_mini.drawImage(
                     image_map,
-                    100,
-                    100,
-                    canvas_mini.width/2, canvas_mini.height/2);
+                    canvas_mini.width/100,
+                    canvas_mini.width/100,
+                    canvas_mini.width - (canvas_mini.width/50), canvas_mini.width - (canvas_mini.width/50));
 
                 context_mini.restore();
             }
@@ -184,10 +199,10 @@ Rocket.graphics = (function() {
 
         that.drawPosition = function (position, view, size) {
             context_mini.save();
-
+            let mini_size = canvas_mini.width - (canvas_mini.width/50);
             context_mini.beginPath();
-            context_mini.arc(((position.x + view.left)*canvas_mini.width/2/size.width) + 100,
-                ((position.y + view.top)*canvas_mini.height/2/size.height) + 100,
+            context_mini.arc(((position.x + view.left)*mini_size/size.width) + canvas_mini.width/100,
+                ((position.y + view.top)*mini_size/size.height) + canvas_mini.width/100,
                 1.5, 0, 2 * Math.PI);
             context_mini.fillStyle = 'red';
             context_mini.fill();
@@ -204,14 +219,52 @@ Rocket.graphics = (function() {
         images[location].src = 'images/' + location;
     }
 
-    function drawMissile(center, radius, color) {
+    function drawMissile(center, direction, color) {
+
+        saveContext();
+        rotateCanvas(center, direction);
+
         context.beginPath();
-        context.arc(Math.floor(center.x * world.size + world.left),
-            Math.floor(center.y * world.size + world.top),
-            2 * radius * world.size, 2 * Math.PI, false);
+
+        context.moveTo(Math.floor((center.x - .007)* world.size + world.left),
+                Math.floor((center.y - .007) * world.size + world.top) - .02);
+        context.lineTo(Math.floor((center.x + .02)* world.size + world.left),
+                Math.floor((center.y)  * world.size + world.top));
+        context.lineTo(Math.floor((center.x - .007)* world.size + world.left),
+                Math.floor((center.y + .007) * world.size + world.top));
         context.closePath();
         context.fillStyle = color;
+
         context.fill();
+        context.strokeStyle = 'black';
+
+        context.lineWidth = 2;
+        context.stroke();
+        restoreContext();
+        // context.beginPath();
+
+        // context.arc(Math.floor(center.x * world.size + world.left),
+        //     Math.floor(center.y * world.size + world.top),
+        //     2 * radius * world.size, 2 * Math.PI, false);
+        // context.closePath();
+        // context.fillStyle = color;
+        // context.fill();
+    }
+
+    function drawRectangle(position, size, rotation, fill, stroke) {
+
+        saveContext();
+
+        context.fillStyle = fill;
+        context.strokeStyle = stroke;
+        context.fillRect(Math.floor((position.x)* world.size + world.left),
+            Math.floor((position.y) * world.size + world.top),
+            size*world.size, size*world.size);
+        context.strokeRect(Math.floor((position.x)* world.size + world.left),
+            Math.floor((position.y) * world.size + world.top),
+            size*world.size, size*world.size);
+
+        restoreContext();
     }
 
     function TiledImage(spec) {
@@ -347,6 +400,7 @@ Rocket.graphics = (function() {
         TiledImage: TiledImage,
         initGraphics: initGraphics,
         miniMap: miniMap,
-        drawMissile: drawMissile
+        drawMissile: drawMissile,
+        drawRectangle: drawRectangle
     };
 }());

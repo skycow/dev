@@ -84,6 +84,19 @@ Rocket.main = (function(input, logic, graphics, assets) {
             },
             timeRemaining: data.timeRemaining
         });
+        if (data.acceleration > 1){
+            missiles[data.id].particle = logic.ParticleSystem({
+                position: {
+                    x: data.position.x,
+                    y: data.position.y
+                },
+                size: .005,
+                speed: data.speed/4,
+                lifetime: 300,
+                fill: 'rgba(0, 255, 0, 0.5)',
+                direction: data.direction - Math.PI
+            }, graphics);
+        }
     }
 
     function updateMsgs(){
@@ -142,10 +155,33 @@ Rocket.main = (function(input, logic, graphics, assets) {
     }
 
     function reconnectPlayerSelf(data) {
-        myPlayer.model.position.x = .5;
-        myPlayer.model.position.y = .5;
         myPlayer.model.orientation = data.orientation;
-        background.setViewport(data.worldView.x - .5, data.worldView.y - .5);
+        let x, y, vx, vy;
+        //set y
+        if (data.worldView.y < .5) {
+            y = data.worldView.y;
+            vy = 0;
+        } else if (data.worldView.y > 4.5) {
+            y = data.worldView.y - 4;
+            vy = 4;
+        } else {
+            y = .5;
+            vy = data.worldView.y - .5;
+        }
+        // set x
+        if (data.worldView.x < .5) {
+            x = data.worldView.x;
+            vx = 0;
+        } else if (data.worldView.x > 4.5) {
+            x = data.worldView.x - 4;
+            vx = 4;
+        } else {
+            x = .5;
+            vx = data.worldView.x - .5;
+        }
+        background.setViewport(vx,vy);
+        myPlayer.model.position.x = x;
+        myPlayer.model.position.y = y;
     }
 
     function connectPlayerSelf(data) {
@@ -170,11 +206,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
             if (!model.state.position.hasOwnProperty('x')){
                 model.state.position.x = data.worldView.x;
                 model.state.position.y = data.worldView.y;
-                console.log(model.state.position);
-                console.log('inside');
             }
-            console.log(model.state.position);
-            console.log('outside');
             model.goal.position.x = data.worldView.x;
 
             model.goal.position.y = data.worldView.y;
@@ -226,6 +258,9 @@ Rocket.main = (function(input, logic, graphics, assets) {
         for (let missile in missiles) {
             if (!missiles[missile].update(elapsedTime)) {
                 removeMissiles.push(missiles[missile]);
+            } else if (missiles[missile].hasParticles) {
+                missiles[missile].particle.setPosition(missiles[missile].position.x, missiles[missile].position.y);
+                missiles[missile].particle.update(elapsedTime);
             }
         }
 
@@ -268,7 +303,10 @@ Rocket.main = (function(input, logic, graphics, assets) {
         for (let missile in missiles){
             let position = drawObjects(missiles[missile].position);
             if (position.hasOwnProperty('x')){
-                graphics.drawMissile(position, missiles[missile].radius, 'black');
+                graphics.drawMissile(position, missiles[missile].direction, 'orange');
+                if (missiles[missile].hasParticles){
+                    missiles[missile].particle.render(background.viewport);
+                }
             }
         }
         graphics.draw(myPlayer.texture, myPlayer.model.position, myPlayer.model.size, myPlayer.model.orientation, true);
