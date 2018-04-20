@@ -16,6 +16,12 @@ Rocket.logic.Player = function () {
     let speed = .3;
     let flipped = true;
 
+    let ammo = 0;
+    let health = 100;
+    let armor = null;
+    let weapon = null;
+    let sprint = null;
+
     Object.defineProperty(that, 'orientation', {
         get: () => orientation,
         set: (value) => { orientation = value }
@@ -24,6 +30,36 @@ Rocket.logic.Player = function () {
     Object.defineProperty(that, 'speed', {
         get: () => speed,
         set: value => { speed = value; }
+    });
+
+
+    Object.defineProperty(that, 'sprint', {
+        get: () => sprint,
+        set: value => { sprint = value; }
+    });
+
+
+    Object.defineProperty(that, 'weapon', {
+        get: () => weapon,
+        set: value => { weapon = value; }
+    });
+
+
+    Object.defineProperty(that, 'health', {
+        get: () => health ,
+        set: value => { health = value; }
+    });
+
+
+    Object.defineProperty(that, 'armor', {
+        get: () => armor,
+        set: value => { armor = value; }
+    });
+
+
+    Object.defineProperty(that, 'ammo', {
+        get: () => ammo,
+        set: value => { ammo = value; }
     });
 
     Object.defineProperty(that, 'rotateRate', {
@@ -139,12 +175,6 @@ Rocket.logic.OtherPlayer = function() {
         get: () => size
     });
 
-    //------------------------------------------------------------------
-    //
-    // Update of the remote player is a simple linear progression/interpolation
-    // from the previous state to the goal (new) state.
-    //
-    //------------------------------------------------------------------
     that.update = function(elapsedTime) {
         // Protect against divide by 0 before the first update from the server has been given
         if (goal.updateWindow === 0) return;
@@ -176,17 +206,14 @@ Rocket.logic.Missile = function(spec) {
         get: () => spec.radius
     });
 
+    Object.defineProperty(that, 'direction', {
+        get: () => spec.direction
+    });
+
     Object.defineProperty(that, 'id', {
         get: () => spec.id
     });
 
-    //------------------------------------------------------------------
-    //
-    // Update the position of the missle.  We don't receive updates from
-    // the server, because the missile moves in a straight line until it
-    // explodes.
-    //
-    //------------------------------------------------------------------
     that.update = function(elapsedTime) {
         let vectorX = Math.cos(spec.direction);
         let vectorY = Math.sin(spec.direction);
@@ -202,6 +229,79 @@ Rocket.logic.Missile = function(spec) {
         } else {
             return true;
         }
+    };
+
+    return that;
+};
+
+Rocket.logic.ParticleSystem = function(spec, graphics) {
+    let that = {};
+
+    let position = {
+        x: spec.position.x,
+        y: spec.position.y
+    };
+
+    that.setPosition = function (x, y) {
+        position.x = x;
+        position.y = y;
+    };
+
+    Object.defineProperty(that, 'position', {
+        get: () => position
+    });
+
+    let particles = [];
+    that.render = function(view) {
+        for (let particle = 0; particle < particles.length; particle++) {
+            if (particles[particle].alive >= 30) {
+                let position_particles = {
+                    x: particles[particle].position.x - view.left,
+                    y: particles[particle].position.y - view.top,
+                }
+                graphics.drawRectangle(
+                position_particles,
+                particles[particle].size,
+                particles[particle].rotation,
+                particles[particle].fill,
+                particles[particle].stroke);
+            }
+        }
+    };
+
+    that.update = function(elapsedTime) {
+        let keepMe = [];
+
+        for (let particle = 0; particle < particles.length; particle++) {
+
+            particles[particle].alive += elapsedTime;
+            let vectorX = Math.cos(particles[particle].direction);
+            let vectorY = Math.sin(particles[particle].direction);
+            particles[particle].position.x += ((vectorX/Math.cos(Math.PI/4)) * (elapsedTime/1000) * particles[particle].speed);
+            particles[particle].position.y += ((vectorY/Math.cos(Math.PI/4)) * (elapsedTime/1000) * particles[particle].speed);
+            particles[particle].rotation += particles[particle].speed / .5;
+
+            if (particles[particle].alive <= particles[particle].lifetime) {
+                keepMe.push(particles[particle]);
+            }
+        }
+
+        for (let particle = 0; particle < 3; particle++) {
+            var plusOrMinus = Math.random() < 0.5 ? -1 : 1;
+            let p = {
+                position: { x: position.x, y: position.y },
+                direction: spec.direction + (Math.random() * (Math.PI/4) * plusOrMinus),
+                speed: spec.speed,	// pixels per millisecond
+                rotation: 0,
+                lifetime: Math.random()*spec.lifetime,	// milliseconds
+                alive: 0,
+                size: spec.size,
+                fill: spec.fill,
+                stroke: 'black'
+            };
+            keepMe.push(p);
+        }
+        particles = keepMe;
     };
 
     return that;
