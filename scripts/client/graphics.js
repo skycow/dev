@@ -6,8 +6,10 @@
 Rocket.graphics = (function() {
     let canvas = document.getElementById('canvas-main');
     let canvas_mini = document.getElementById('canvas-mini');
+    let canvas_mini_shield = document.getElementById('canvas-mini-shield');
     let context = canvas.getContext('2d');
-    let context_mini = canvas.getContext('2d');
+    let context_mini = canvas_mini.getContext('2d');
+    let context_mini_shield = canvas_mini_shield.getContext('2d');
 
     let images = {};
     let world = {
@@ -177,6 +179,33 @@ Rocket.graphics = (function() {
 
                 context_mini.restore();
             }
+        };
+
+        that.drawShield = function (position, view, size) {
+            context_mini_shield.save();
+
+
+            context_mini_shield.beginPath();
+            context_mini_shield.fillStyle = 'blue';
+            context_mini_shield.rect(100,100,canvas_mini_shield.width-200, canvas_mini_shield.height-200);
+            context_mini_shield.fill();
+
+            // context_mini_shield.beginPath();
+            // context_mini_shield.globalCompositeOperation = 'destination-in';
+            // context_mini_shield.arc(((position.x)*canvas_mini_shield.width/2/size.width) + 100,
+            //     ((position.y)*canvas_mini_shield.height/2/size.height) + 100,
+            //     30, 0, 2 * Math.PI);
+            // context_mini_shield.fill();
+            context_mini_shield.globalCompositeOperation = 'destination-out';
+
+            context_mini_shield.beginPath();
+            context_mini_shield.arc(((position.x)*canvas_mini_shield.width/2/size.width) + 100,
+            ((position.y)*canvas_mini_shield.height/2/size.height) + 100,
+            30, 0, 2 * Math.PI);
+            context_mini_shield.fill();
+            //context_mini_shield.stroke();
+            // context_mini_shield.globalCompositeOperation = 'source-atop';
+            context_mini_shield.restore();
         };
 
         that.drawPosition = function (position, view, size) {
