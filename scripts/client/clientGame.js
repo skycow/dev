@@ -11,7 +11,8 @@ Rocket.main = (function(input, logic, graphics, assets) {
         mini = graphics.miniMap(),
         jobQueue = logic.createQueue(),
         otherUsers = [],
-        missiles = {};
+        missiles = {},
+        gameTime = 10 * 60; //seconds
 
     function network() {
         socketIO.on(NetworkIds.CONNECT_ACK, data => {
@@ -45,6 +46,13 @@ Rocket.main = (function(input, logic, graphics, assets) {
         socketIO.on(NetworkIds.UPDATE_OTHER, data => {
             jobQueue.enqueue({
                 type: NetworkIds.UPDATE_OTHER,
+                data: data
+            });
+        });
+
+        socketIO.on(NetworkIds.UPDATE_SELF, data => {
+            jobQueue.enqueue({
+                type: NetworkIds.UPDATE_SELF,
                 data: data
             });
         });
@@ -152,6 +160,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
         if (data.item){
             myPlayer.model.sprint = data.sprint;
         }
+        gameTime = data.gameTime;
     }
 
     function connectPlayerOther(data) {
@@ -220,6 +229,8 @@ Rocket.main = (function(input, logic, graphics, assets) {
     }
 
     function updateOthers(data) {
+        gameTime = data.gameTime;
+
         if (otherUsers.hasOwnProperty(data.clientId)) {
             let model = otherUsers[data.clientId].model;
             model.goal.updateWindow = data.updateWindow;
@@ -268,6 +279,15 @@ Rocket.main = (function(input, logic, graphics, assets) {
 
         position.x = newCenter.x;
         position.y = newCenter.y;
+    }
+
+    function gameClock(gameTime) {
+        gameSeconds = Math.floor(gameTime%60);
+        gameMinutes = Math.floor(gameTime/60).toString();
+        if ( gameSeconds < 10){
+            gameSeconds = '0'+gameSeconds.toString();
+        }
+        return gameMinutes + ':' + gameSeconds.toString();
     }
 
     function update(elapsedTime){
@@ -333,6 +353,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
         graphics.draw(myPlayer.texture, myPlayer.model.position, myPlayer.model.size, myPlayer.model.orientation, true);
         mini.drawMini();
         mini.drawPosition(myPlayer.model.position, background.viewport, background.size);
+        document.getElementById('field-clock').innerHTML = gameClock(gameTime);
     }
 
     function gameLoop(time) {

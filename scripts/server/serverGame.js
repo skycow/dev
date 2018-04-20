@@ -20,6 +20,7 @@ let activeMissiles = [];
 let hits = [];
 let inputQueue = Queue.create();
 let nextMissileId = 1;
+let gameTime = 10 * 60; //seconds
 
 function createMissile(userId, user) {
     let missile = Missile.create({
@@ -95,6 +96,7 @@ function collided(obj1, obj2) {
 //
 //------------------------------------------------------------------
 function update(elapsedTime, currentTime) {
+    gameTime = (gameTime - elapsedTime/1000)%(10*60+1);
     for (let clientId in activeUsers) {
         activeUsers[clientId].user.update(currentTime);
     }
@@ -189,10 +191,12 @@ function updateClients(elapsedTime) {
             lastMessageId: client.lastMessageId,
             orientation: client.user.orientation,
             worldView: client.user.worldView,
-            updateWindow: lastUpdate
+            updateWindow: lastUpdate,
+            gameTime: gameTime
         };
         if (client.user.reportUpdate) {
             client.socket.emit(NetworkIds.UPDATE_SELF, update);
+            client.user.reportUpdate = false;
         }
 
         for (let otherId in activeUsers) {
@@ -215,7 +219,7 @@ function updateClients(elapsedTime) {
     }
 
     for (let clientId in activeUsers) {
-        activeUsers[clientId].user.reportUpdate = false;
+        activeUsers[clientId].user.reportUpdate = true;
     }
 
     hits.length = 0;
@@ -271,6 +275,7 @@ function initializeSocketIO(http) {
                 io.emit('start game', 'countdown finished');
                 clearInterval(refresh);
                 reconnection = true;
+                gameTime = 10 * 60;
             }
         }, 1000);
     }
