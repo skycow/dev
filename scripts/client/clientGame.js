@@ -5,7 +5,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
     let keyboard = input.Keyboard(), lastTimeStamp, messageId = 1,
         myPlayer = {
             model: logic.Player(),
-            texture: 'playerShip1_blue.png'
+            texture: 'bunny.png'
         },
         background = null,
         mini = graphics.miniMap(),
@@ -120,6 +120,9 @@ Rocket.main = (function(input, logic, graphics, assets) {
                 case NetworkIds.UPDATE_OTHER:
                     updateOthers(message.data);
                     break;
+                case NetworkIds.UPDATE_SELF:
+                    updateSelf(message.data);
+                    break;
                 case NetworkIds.UPDATE_OTHER_DELETE:
                     untrack(message.data);
                     break;
@@ -133,6 +136,24 @@ Rocket.main = (function(input, logic, graphics, assets) {
         }
     }
 
+    function updateSelf(data) {
+        if (data.weapon){
+            myPlayer.model.weapon = data.weapon;
+        }
+        if (data.health){
+            myPlayer.model.health = data.health;
+        }
+        if (data.ammo){
+            myPlayer.model.ammo = data.ammo;
+        }
+        if (data.armor){
+            myPlayer.model.armor = data.armor;
+        }
+        if (data.item){
+            myPlayer.model.sprint = data.sprint;
+        }
+    }
+
     function connectPlayerOther(data) {
         let model = logic.OtherPlayer();
         // model.state.position.x = data.position.x + data.view.left;
@@ -140,7 +161,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
 
         otherUsers[data.userId] = {
             model: model,
-            texture: 'playerShip1_blue.png'
+            texture: 'bunny.png'
         };
     }
 
@@ -150,7 +171,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
 
         otherUsers[data.userId] = {
             model: model,
-            texture: 'playerShip1_blue.png'
+            texture: 'bunny.png'
         };
     }
 
@@ -258,7 +279,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
         for (let missile in missiles) {
             if (!missiles[missile].update(elapsedTime)) {
                 removeMissiles.push(missiles[missile]);
-            } else if (missiles[missile].hasParticles) {
+            } else if (missiles[missile].particle) {
                 missiles[missile].particle.setPosition(missiles[missile].position.x, missiles[missile].position.y);
                 missiles[missile].particle.update(elapsedTime);
             }
@@ -304,7 +325,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
             let position = drawObjects(missiles[missile].position);
             if (position.hasOwnProperty('x')){
                 graphics.drawMissile(position, missiles[missile].direction, 'orange');
-                if (missiles[missile].hasParticles){
+                if (missiles[missile].particle){
                     missiles[missile].particle.render(background.viewport);
                 }
             }

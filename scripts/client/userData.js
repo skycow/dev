@@ -16,6 +16,12 @@ Rocket.logic.Player = function () {
     let speed = .3;
     let flipped = true;
 
+    let ammo = 0;
+    let health = 100;
+    let armor = null;
+    let weapon = null;
+    let sprint = null;
+
     Object.defineProperty(that, 'orientation', {
         get: () => orientation,
         set: (value) => { orientation = value }
@@ -24,6 +30,36 @@ Rocket.logic.Player = function () {
     Object.defineProperty(that, 'speed', {
         get: () => speed,
         set: value => { speed = value; }
+    });
+
+
+    Object.defineProperty(that, 'sprint', {
+        get: () => sprint,
+        set: value => { sprint = value; }
+    });
+
+
+    Object.defineProperty(that, 'weapon', {
+        get: () => weapon,
+        set: value => { weapon = value; }
+    });
+
+
+    Object.defineProperty(that, 'health', {
+        get: () => health ,
+        set: value => { health = value; }
+    });
+
+
+    Object.defineProperty(that, 'armor', {
+        get: () => armor,
+        set: value => { armor = value; }
+    });
+
+
+    Object.defineProperty(that, 'ammo', {
+        get: () => ammo,
+        set: value => { ammo = value; }
     });
 
     Object.defineProperty(that, 'rotateRate', {
@@ -139,12 +175,6 @@ Rocket.logic.OtherPlayer = function() {
         get: () => size
     });
 
-    //------------------------------------------------------------------
-    //
-    // Update of the remote player is a simple linear progression/interpolation
-    // from the previous state to the goal (new) state.
-    //
-    //------------------------------------------------------------------
     that.update = function(elapsedTime) {
         // Protect against divide by 0 before the first update from the server has been given
         if (goal.updateWindow === 0) return;
@@ -168,28 +198,12 @@ Rocket.logic.OtherPlayer = function() {
 Rocket.logic.Missile = function(spec) {
     let that = {};
 
-    let particle = null;
-
-    Object.defineProperty(that, 'particle', {
-        get: () => particle,
-        set: value => { particle = value; }
-    });
-
     Object.defineProperty(that, 'position', {
         get: () => spec.position
     });
 
     Object.defineProperty(that, 'radius', {
         get: () => spec.radius
-    });
-
-    Object.defineProperty(that, 'hasParticles', {
-        get: () => function () {
-            if (spec.acceleration > 1) {
-                return true;
-            }
-            return false;
-        }
     });
 
     Object.defineProperty(that, 'direction', {
@@ -200,13 +214,6 @@ Rocket.logic.Missile = function(spec) {
         get: () => spec.id
     });
 
-    //------------------------------------------------------------------
-    //
-    // Update the position of the missle.  We don't receive updates from
-    // the server, because the missile moves in a straight line until it
-    // explodes.
-    //
-    //------------------------------------------------------------------
     that.update = function(elapsedTime) {
         let vectorX = Math.cos(spec.direction);
         let vectorY = Math.sin(spec.direction);

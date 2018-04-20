@@ -2,7 +2,7 @@ Rocket.assets.init = function () {
 
     let assetOrder = [{
         key: 'user',
-        source: 'images/playerShip1_blue.png'
+        source: 'images/bunny.png'
     }];
 
     function createImage(tileKey, location) {

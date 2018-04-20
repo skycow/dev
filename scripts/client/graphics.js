@@ -155,16 +155,16 @@ Rocket.graphics = (function() {
         //     sprite.width, sprite.height
 
         if (me){
-            context.globalAlpha = .1;
+            context.globalAlpha = .15;
             context.beginPath();
             // context.moveTo(Math.floor((center.x - size.width / 2) * world.size + world.left) + (size.width * world.size/2),
             //     Math.floor((center.y - size.height / 2) * world.size + world.top) + (size.width * world.size/2));
             context.arc(Math.floor((center.x - size.width / 2) * world.size + world.left) + (size.width * world.size/2),
                 Math.floor((center.y - size.height / 2) * world.size + world.top) + (size.width * world.size/2),
-                world.size/3, Math.PI*(13/8), Math.PI*(3/8));
+                world.size*(.943), Math.PI*(13/8), Math.PI*(3/8), true);
             context.lineTo(Math.floor((center.x - size.width / 2) * world.size + world.left) + (size.width * world.size/2),
                 Math.floor((center.y - size.height / 2) * world.size + world.top) + (size.width * world.size/2));
-            context.fillStyle = 'red';
+            context.fillStyle = 'gray';
             context.fill();
             context.stroke();
         }
