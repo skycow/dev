@@ -158,6 +158,7 @@ Rocket.graphics = (function() {
         };
 
         rotateCanvas(center, orientation);
+        console.log(texture);
 
         context.drawImage(images[texture], 0, 0, images[texture].width, images[texture].height,
             Math.floor((center.x - size.width / 2) * world.size + world.left),
