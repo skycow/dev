@@ -6,7 +6,7 @@
 function createMissile(spec) {
     let that = {};
 
-    let radius = 0.0025;
+    let radius = 0.01;
     let speed = spec.speed + 0.0002;    // unit distance per millisecond
     let acceleration = 1.02;
     let timeRemaining = 1500;   // milliseconds
@@ -49,8 +49,11 @@ function createMissile(spec) {
         let vectorY = Math.sin(spec.direction);
 
         speed *= acceleration;
-        spec.position.x += ((vectorX*1.5) * (elapsedTime/1000) * speed);
-        spec.position.y += ((vectorY*1.5) * (elapsedTime/1000) * speed);
+
+        spec.position.x += ((vectorX/Math.cos(Math.PI/4)) * (elapsedTime/1000) * speed);
+        spec.position.y += ((vectorY/Math.cos(Math.PI/4)) * (elapsedTime/1000) * speed);
+        // spec.position.x += ((vectorX*1.5) * (elapsedTime/1000) * speed);
+        // spec.position.y += ((vectorY*1.5) * (elapsedTime/1000) * speed);
 
         timeRemaining -= elapsedTime;
 

@@ -13,8 +13,10 @@ function makePlayer() {
 
     let size = {
         width: 0.05,
-        height: 0.05
+        height: 0.05,
     };
+
+    let radius = (0.05/2);
 
     let worldView = {
       x: position.x + view.left,
@@ -48,6 +50,11 @@ function makePlayer() {
     });
 
     Object.defineProperty(that, 'position', {
+        get: () => worldView,
+        set: value => { worldView = value; }
+    });
+
+    Object.defineProperty(that, 'myPosition', {
         get: () => position,
         set: value => { position = value; }
     });
@@ -64,6 +71,10 @@ function makePlayer() {
 
     Object.defineProperty(that, 'size', {
         get: () => size
+    });
+
+    Object.defineProperty(that, 'radius', {
+        get: () => radius
     });
 
     that.moveUp = function(elapsedTime) {
