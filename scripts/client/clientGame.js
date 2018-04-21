@@ -14,7 +14,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
         missiles = {},
         gameTime = 10 * 60, //seconds
         shield = {x:0,y:0,radius:0};
-        weapons = [];
+        pickups = [];
 
     function network() {
         socketIO.on(NetworkIds.CONNECT_ACK, data => {
@@ -164,7 +164,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
         }
         gameTime = data.gameTime;
         shield = data.shield;
-        weapons = data.weapons;
+        pickups = data.pickups;
     }
 
     function connectPlayerOther(data) {
@@ -379,10 +379,10 @@ Rocket.main = (function(input, logic, graphics, assets) {
                 }
             }
         }
-        for (let weapon in weapons){
-            let position = drawObjects(weapons[weapon]);
+        for (let pickup in pickups){
+            let position = drawObjects(pickups[pickup]);
             if (position.hasOwnProperty('x')){
-                graphics.draw('carrot.png', position, {width:0.025,height:0.025},0,false);
+                graphics.draw(pickups[pickup].texture, position, {width:0.025,height:0.025},0,false);
             }
         }
         graphics.draw(myPlayer.texture, myPlayer.model.position, myPlayer.model.size, myPlayer.model.orientation, true);
@@ -416,6 +416,10 @@ Rocket.main = (function(input, logic, graphics, assets) {
         background.setViewport(0.00, 0.00);
         graphics.createImage(myPlayer.texture);
         graphics.createImage('carrot.png');
+        graphics.createImage('bazooka1.png');
+        graphics.createImage('upgradeWeapon.png');
+        graphics.createImage('orangeCarrot.png');
+        graphics.createImage('purpleCarrot.png');
         graphics.initGraphics();
 
         keyboard.registerHandler(elapsedTime => {
