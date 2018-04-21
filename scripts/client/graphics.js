@@ -195,61 +195,18 @@ Rocket.graphics = (function() {
         context_shield.save();
 
         context_shield.beginPath();
-        // context_shield.globalCompositeOperation = 'destination-over'
         context_shield.fillStyle = 'rgba(0,0,255,0.5)';
-        // context_shield.globalAlpha = 0.5;
         context_shield.fillRect(0,0,canvas.width, canvas.height);
-        //context_shield.fill();
-
 
         context_shield.beginPath();
         context_shield.globalCompositeOperation = 'destination-out';
-
-        // if(ready) {
-            //     context.strokeStyle = context.createPattern(img, 'repeat');
-            // }
         context_shield.arc(world.left + (center.x - view.left)*world.size,
         world.top + (center.y - view.top) * world.size,
         center.radius*world.size, 0, 2 * Math.PI);
         context_shield.fillStyle = 'white';
         context_shield.fill();
 
-
         context_shield.restore();
-
-
-        // // var img = new Image();
-        // // var ready = false;
-        // // img.src = 'images/bunny.png';
-        // // img.onload = function() {
-        // //     ready = true;
-        // // };
-
-        // context_shield.save();
-
-        // context_shield.beginPath();
-        // context_shield.globalCompositeOperation = 'destination-in';
-
-        // // if(ready) {
-        // //     context.strokeStyle = context.createPattern(img, 'repeat');
-        // // }
-        // context_shield.arc(world.left + (center.x - view.left)*world.size,
-        //     world.top + (center.y - view.top) * world.size,
-        //     center.radius*world.size, 0, 2 * Math.PI);
-        // context_shield.fill();
-
-
-
-
-        // context_shield.beginPath();
-        // context_shield.globalCompositeOperation = 'destination-over'
-        // context_shield.fillStyle = 'rgba(0,255,0,0.5)';
-        // // context_shield.globalAlpha = 0.5;
-        // context_shield.fillRect(0,0,canvas.width, canvas.height);
-        // //context_shield.fill();
-
-        // context_shield.restore();
-
     }
 
     function miniMap() {
@@ -308,7 +265,6 @@ Rocket.graphics = (function() {
             context_mini_shield.arc(((position.x)*mini_size/size.width) + canvas_mini.width/100,
                 ((position.y)*mini_size/size.height) + canvas_mini.width/100,
                 position.radius*mini_size/size.height, 0, 2 * Math.PI);
-            // context_mini_shield.globalAlpha = 0;
             context_mini_shield.fillStyle = 'white';
 
             context_mini_shield.fill();
