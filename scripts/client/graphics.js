@@ -199,6 +199,22 @@ Rocket.graphics = (function() {
         context_shield.fillRect(0,0,canvas.width, canvas.height);
 
         context_shield.beginPath();
+        context_shield.arc(world.left + (center.x - view.left)*world.size,
+        world.top + (center.y - view.top) * world.size,
+        center.radius*world.size, 0, 2 * Math.PI);
+        context_shield.strokeStyle = "red";
+        context_shield.lineWidth = 50;
+        context_shield.stroke();
+
+        context_shield.beginPath();
+        context_shield.arc(world.left + (center.x - view.left)*world.size,
+        world.top + (center.y - view.top) * world.size,
+        center.radius*world.size, 0, 2 * Math.PI);
+        context_shield.strokeStyle = context_shield.createPattern(document.getElementById('bunnyimg'), 'repeat');
+        context_shield.lineWidth = 50;
+        context_shield.stroke();
+
+        context_shield.beginPath();
         context_shield.globalCompositeOperation = 'destination-out';
         context_shield.arc(world.left + (center.x - view.left)*world.size,
         world.top + (center.y - view.top) * world.size,
