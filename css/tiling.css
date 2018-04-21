@@ -17,6 +17,15 @@
 
 }
 
+#canvas-mini-shield {
+    background-color: transparent;
+    z-index: 3;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+
+}
+
 #canvas-right {
     background-color: teal;
     z-index: 2;
@@ -26,6 +35,14 @@
 
 #canvas-main {
     background-color: teal;
+    z-index: 1;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+}
+
+#canvas-main-shield {
+    background-color: transparent;
     z-index: 1;
     position: absolute;
     top: 0px;
