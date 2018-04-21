@@ -21,6 +21,7 @@ let hits = [];
 let inputQueue = Queue.create();
 let nextMissileId = 1;
 let gameTime = 10 * 60; //seconds
+let shield = {};
 
 function createMissile(userId, user) {
     let missile = Missile.create({
@@ -96,7 +97,11 @@ function collided(obj1, obj2) {
 //
 //------------------------------------------------------------------
 function update(elapsedTime, currentTime) {
-    gameTime = (gameTime - elapsedTime/1000)%(10*60+1);
+    gameTime = (gameTime - elapsedTime/1000);
+    if(gameTime < 0) {
+        gameTime = 10*60;
+    }
+    shield.radius = Math.sqrt(32)*(gameTime/(10*60));
     for (let clientId in activeUsers) {
         activeUsers[clientId].user.update(currentTime);
     }
@@ -192,7 +197,8 @@ function updateClients(elapsedTime) {
             orientation: client.user.orientation,
             worldView: client.user.worldView,
             updateWindow: lastUpdate,
-            gameTime: gameTime
+            gameTime: gameTime,
+            shield: shield
         };
         if (client.user.reportUpdate) {
             client.socket.emit(NetworkIds.UPDATE_SELF, update);
@@ -224,6 +230,12 @@ function updateClients(elapsedTime) {
 
     hits.length = 0;
     lastUpdate = 0;
+}
+
+function initializeShield() {
+    shield.x = Math.random() * 3 + 1;
+    shield.y = Math.random() * 3 + 1;
+    shield.radius = Math.sqrt(32);
 }
 
 //------------------------------------------------------------------
@@ -401,6 +413,7 @@ function initializeSocketIO(http) {
 
 function initialize(http) {
     initializeSocketIO(http);
+    initializeShield();
     gameLoop(present(), 0);
 }
 

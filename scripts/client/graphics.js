@@ -5,13 +5,17 @@
 // ------------------------------------------------------------------
 Rocket.graphics = (function() {
     let canvas = document.getElementById('canvas-main');
+    let canvas_shield = document.getElementById('canvas-main-shield');
     let canvas_mini = document.getElementById('canvas-mini');
+    let canvas_mini_shield = document.getElementById('canvas-mini-shield');
     let canvas_right = document.getElementById('canvas-right');
     let user_name = document.getElementById('h1-id-username');
     let timer = document.getElementById('field-clock');
 
     let context = canvas.getContext('2d');
+    let context_shield = canvas_shield.getContext('2d');
     let context_mini = canvas_mini.getContext('2d');
+    let context_mini_shield = canvas_mini_shield.getContext('2d');
     let context_right = canvas_right.getContext('2d');
 
     let images = {};
@@ -26,6 +30,8 @@ Rocket.graphics = (function() {
 
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
+        canvas_shield.width = canvas.width;
+        canvas_shield.height = canvas.height;
 
         //
         // Have to figure out where the upper left corner of the unit world is
@@ -44,6 +50,8 @@ Rocket.graphics = (function() {
 
         canvas_mini.width = world.left;
         canvas_mini.height = canvas.height;
+        canvas_mini_shield.width = world.left;
+        canvas_mini_shield.height = canvas.height;
         canvas_right.width = world.left;
         canvas_right.height = canvas.height;
         canvas_right.style.left = (world.size + world.left).toString() + "px";
@@ -83,7 +91,10 @@ Rocket.graphics = (function() {
     //------------------------------------------------------------------
     function clear() {
         context.clear();
+        context_shield.clear();
         context_mini.clear();
+        context_mini_shield.clear();
+        context_right.clear();
     }
 
     //------------------------------------------------------------------
@@ -93,7 +104,10 @@ Rocket.graphics = (function() {
     //------------------------------------------------------------------
     function saveContext() {
         context.save();
+        context_shield.save();
         context_mini.save();
+        context_mini_shield.save();
+        context_right.save();
     }
 
     //------------------------------------------------------------------
@@ -103,7 +117,10 @@ Rocket.graphics = (function() {
     //------------------------------------------------------------------
     function restoreContext() {
         context.restore();
+        context_shield.restore();
         context_mini.restore();
+        context_mini_shield.restore();
+        context_right.restore();
     }
 
     //------------------------------------------------------------------
@@ -173,6 +190,41 @@ Rocket.graphics = (function() {
 
     }
 
+    function drawShield(center, view) {
+
+        context_shield.save();
+
+        context_shield.beginPath();
+        context_shield.fillStyle = 'rgba(0,0,255,0.5)';
+        context_shield.fillRect(0,0,canvas.width, canvas.height);
+
+        context_shield.beginPath();
+        context_shield.arc(world.left + (center.x - view.left)*world.size,
+        world.top + (center.y - view.top) * world.size,
+        center.radius*world.size, 0, 2 * Math.PI);
+        context_shield.strokeStyle = "red";
+        context_shield.lineWidth = 50;
+        context_shield.stroke();
+
+        context_shield.beginPath();
+        context_shield.arc(world.left + (center.x - view.left)*world.size,
+        world.top + (center.y - view.top) * world.size,
+        center.radius*world.size, 0, 2 * Math.PI);
+        context_shield.strokeStyle = context_shield.createPattern(document.getElementById('bunnyimg'), 'repeat');
+        context_shield.lineWidth = 50;
+        context_shield.stroke();
+
+        context_shield.beginPath();
+        context_shield.globalCompositeOperation = 'destination-out';
+        context_shield.arc(world.left + (center.x - view.left)*world.size,
+        world.top + (center.y - view.top) * world.size,
+        center.radius*world.size, 0, 2 * Math.PI);
+        context_shield.fillStyle = 'white';
+        context_shield.fill();
+
+        context_shield.restore();
+    }
+
     function miniMap() {
         var that = {},
             ready = false,
@@ -209,6 +261,31 @@ Rocket.graphics = (function() {
             context_mini.stroke();
 
             context_mini.restore();
+        };
+
+        that.drawShield = function (position, view, size) {
+            context_mini_shield.save();
+            let mini_size = canvas_mini.width - (canvas_mini.width/50);
+
+            context_mini_shield.beginPath();
+            context_mini_shield.fillStyle = 'rgba(0,0,255,0.5)';
+            context_mini_shield.rect(canvas_mini.width/100,
+                canvas_mini.width/100,
+                canvas_mini.width - (canvas_mini.width/50),
+                canvas_mini.width - (canvas_mini.width/50));
+            context_mini_shield.fill();
+
+
+            context_mini_shield.beginPath();
+            context_mini_shield.globalCompositeOperation = "destination-out";
+            context_mini_shield.arc(((position.x)*mini_size/size.width) + canvas_mini.width/100,
+                ((position.y)*mini_size/size.height) + canvas_mini.width/100,
+                position.radius*mini_size/size.height, 0, 2 * Math.PI);
+            context_mini_shield.fillStyle = 'white';
+
+            context_mini_shield.fill();
+
+            context_mini_shield.restore();
         };
 
         return that;
@@ -396,6 +473,7 @@ Rocket.graphics = (function() {
         restoreContext: restoreContext,
         rotateCanvas: rotateCanvas,
         draw: draw,
+        drawShield: drawShield,
         createImage: createImage,
         TiledImage: TiledImage,
         initGraphics: initGraphics,

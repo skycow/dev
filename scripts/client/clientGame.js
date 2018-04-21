@@ -12,7 +12,8 @@ Rocket.main = (function(input, logic, graphics, assets) {
         jobQueue = logic.createQueue(),
         otherUsers = [],
         missiles = {},
-        gameTime = 10 * 60; //seconds
+        gameTime = 10 * 60, //seconds
+        shield = {x:0,y:0,radius:0};
 
     function network() {
         socketIO.on(NetworkIds.CONNECT_ACK, data => {
@@ -161,6 +162,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
             myPlayer.model.sprint = data.sprint;
         }
         gameTime = data.gameTime;
+        shield = data.shield;
     }
 
     function connectPlayerOther(data) {
@@ -230,6 +232,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
 
     function updateOthers(data) {
         gameTime = data.gameTime;
+        shield = data.shield;
 
         if (otherUsers.hasOwnProperty(data.clientId)) {
             let model = otherUsers[data.clientId].model;
@@ -378,8 +381,10 @@ Rocket.main = (function(input, logic, graphics, assets) {
             }
         }
         graphics.draw(myPlayer.texture, myPlayer.model.position, myPlayer.model.size, myPlayer.model.orientation, true);
+        graphics.drawShield(shield, background.viewport);
         mini.drawMini();
         mini.drawPosition(myPlayer.model.position, background.viewport, background.size);
+        mini.drawShield(shield, background.viewport, background.size);
         document.getElementById('field-clock').innerHTML = gameClock(gameTime);
     }
 
