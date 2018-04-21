@@ -332,14 +332,11 @@ Rocket.main = (function(input, logic, graphics, assets) {
             let deltaY = position.y - myPlayer.model.position.y;
             let objDir = Math.atan2(deltaY,deltaX);
             //find if they are in my view
-            console.log(objDir)
             if (objDir <= 0) {
                 objDir += (2*Math.PI);
             }
             let viewCheck = myPlayer.model.orientation % (2*Math.PI);
             if (viewCheck < 0) viewCheck += (2*Math.PI);
-            console.log(viewCheck)
-
             let thetaMin = viewCheck - Math.PI*(3/8);
             if (thetaMin < 0){
                 thetaMin += (2*Math.PI);

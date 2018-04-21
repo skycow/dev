@@ -206,13 +206,14 @@ Rocket.graphics = (function() {
         context_shield.lineWidth = 50;
         context_shield.stroke();
 
-        context_shield.beginPath();
-        context_shield.arc(world.left + (center.x - view.left)*world.size,
-        world.top + (center.y - view.top) * world.size,
-        center.radius*world.size, 0, 2 * Math.PI);
-        context_shield.strokeStyle = context_shield.createPattern(document.getElementById('bunnyimg'), 'repeat');
-        context_shield.lineWidth = 50;
-        context_shield.stroke();
+        //drawing the bunny-ring makes the rendering suck bad
+        // context_shield.beginPath();
+        // context_shield.arc(world.left + (center.x - view.left)*world.size,
+        // world.top + (center.y - view.top) * world.size,
+        // center.radius*world.size, 0, 2 * Math.PI);
+        // context_shield.strokeStyle = context_shield.createPattern(document.getElementById('bunnyimg'), 'repeat');
+        // context_shield.lineWidth = 50;
+        // context_shield.stroke();
 
         context_shield.beginPath();
         context_shield.globalCompositeOperation = 'destination-out';
