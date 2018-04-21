@@ -22,6 +22,7 @@ let inputQueue = Queue.create();
 let nextMissileId = 1;
 let gameTime = 10 * 60; //seconds
 let shield = {};
+let weapons = {};
 
 function createMissile(userId, user) {
     let missile = Missile.create({
@@ -157,6 +158,72 @@ function sameArea(object1, object2){
     return 2;
 }
 
+function getLocalWeapons(client) {
+    let posx = client.user.worldView.x;
+    let posy = client.user.worldView.y;
+    let localWeapons = weapons
+    .row[Math.floor(client.user.worldView.y)]
+    .col[Math.floor(client.user.worldView.x)];
+
+    if(posx >= 1) {
+        localWeapons = localWeapons.concat(
+            weapons
+            .row[Math.floor(client.user.worldView.y)]
+            .col[Math.floor(client.user.worldView.x-1)]
+        )
+        if(posy >= 1) {
+            localWeapons = localWeapons.concat(
+                weapons
+                .row[Math.floor(client.user.worldView.y-1)]
+                .col[Math.floor(client.user.worldView.x-1)]
+            )
+        }
+        if(posy <= 4) {
+            localWeapons = localWeapons.concat(
+                weapons
+                .row[Math.floor(client.user.worldView.y+1)]
+                .col[Math.floor(client.user.worldView.x-1)]
+            )
+        }
+    }
+    if(posx <= 4) {
+        localWeapons = localWeapons.concat(
+            weapons
+            .row[Math.floor(client.user.worldView.y)]
+            .col[Math.floor(client.user.worldView.x+1)]
+        )
+        if(posy >= 1) {
+            localWeapons = localWeapons.concat(
+                weapons
+                .row[Math.floor(client.user.worldView.y-1)]
+                .col[Math.floor(client.user.worldView.x+1)]
+            )
+        }
+        if(posy <= 4) {
+            localWeapons = localWeapons.concat(
+                weapons
+                .row[Math.floor(client.user.worldView.y+1)]
+                .col[Math.floor(client.user.worldView.x+1)]
+            )
+        }
+    }
+    if(posy >= 1) {
+        localWeapons = localWeapons.concat(
+            weapons
+            .row[Math.floor(client.user.worldView.y-1)]
+            .col[Math.floor(client.user.worldView.x)]
+        )
+    }
+    if(posy <= 4) {
+        localWeapons = localWeapons.concat(
+            weapons
+            .row[Math.floor(client.user.worldView.y+1)]
+            .col[Math.floor(client.user.worldView.x)]
+        )
+    }
+    return localWeapons;
+}
+
 function updateClients(elapsedTime) {
     //
     // For demonstration purposes, network updates run at a slower rate than
@@ -201,6 +268,7 @@ function updateClients(elapsedTime) {
             shield: shield
         };
         if (client.user.reportUpdate) {
+            update.weapons = getLocalWeapons(client);
             client.socket.emit(NetworkIds.UPDATE_SELF, update);
             client.user.reportUpdate = false;
         }
@@ -236,6 +304,24 @@ function initializeShield() {
     shield.x = Math.random() * 3 + 1;
     shield.y = Math.random() * 3 + 1;
     shield.radius = Math.sqrt(32);
+}
+
+function initializeWeapons() {
+    weapons.row = [];
+    for(let r = 0; r < 5; r++) {
+        weapons.row.push({col:[]})
+        for(let c = 0; c < 5; c++) {
+            weapons.row[r].col.push([]);
+        }
+    }
+
+    for (let i = 0; i < 100; i++) {
+        let tempx = Math.random() * 4.9;
+        let tempy = Math.random() * 4.9;
+        weapons.row[Math.floor(tempy)].col[Math.floor(tempx)].push({x:tempx,y:tempy});
+        console.log("x: " + tempx + "y: " + tempy);
+    }
+
 }
 
 //------------------------------------------------------------------
@@ -414,6 +500,7 @@ function initializeSocketIO(http) {
 function initialize(http) {
     initializeSocketIO(http);
     initializeShield();
+    initializeWeapons();
     gameLoop(present(), 0);
 }
 
