@@ -12,6 +12,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
         jobQueue = logic.createQueue(),
         otherUsers = [],
         missiles = {},
+        hits = [],
         gameTime = 10 * 60, //seconds
         shield = {x:0,y:0,radius:0};
         pickups = [];
@@ -81,6 +82,42 @@ Rocket.main = (function(input, logic, graphics, assets) {
         });
     }
 
+    function playerHits(data) {
+        console.log('hits');
+        let position = drawObjects(data.position);
+        console.log(data.position);
+        console.log(position);
+        delete missiles[data.missileId];
+        if (position){
+            hits.push({
+                texture: 'explode.png',
+                life: 500,
+                model: {
+                    position: position,
+                    orientation: 0,
+                    size: {
+                        width: .03,
+                        height: .03
+                    }
+                }
+            })
+        }
+        if (data.userId === myPlayer.model.userId) {
+            hits.push({
+                texture: 'explode.png',
+                life: 500,
+                model: {
+                    position: myPlayer.model.position,
+                    orientation: 0,
+                    size: {
+                        width: .03,
+                        height: .03
+                    }
+                }
+            })
+        }
+    }
+
     function missileNew(data) {
         missiles[data.id] = logic.Missile({
             id: data.id,
@@ -140,7 +177,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
                     missileNew(message.data);
                     break;
                 case NetworkIds.MISSILE_HIT:
-                    //console.log('Put missile hit code here');
+                    playerHits(message.data);
                     break;
             }
         }
@@ -169,8 +206,6 @@ Rocket.main = (function(input, logic, graphics, assets) {
 
     function connectPlayerOther(data) {
         let model = logic.OtherPlayer();
-        // model.state.position.x = data.position.x + data.view.left;
-        // model.state.position.y = data.position.y + data.view.top;
 
         otherUsers[data.userId] = {
             model: model,
@@ -219,6 +254,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
     }
 
     function connectPlayerSelf(data) {
+        myPlayer.model.userId = data.userId;
         myPlayer.model.position.x = data.position.x;
         myPlayer.model.position.y = data.position.y;
         background.setViewport(data.view.left, data.view.top);
@@ -300,6 +336,14 @@ Rocket.main = (function(input, logic, graphics, assets) {
         for (let index in otherUsers){
             otherUsers[index].model.update(elapsedTime);
         }
+
+        for (let index in hits){
+            hits[index].life -= elapsedTime;
+            if (hits[index].life < 0) {
+                hits.splice(index, 1);
+            }
+        }
+
         let removeMissiles = [];
         for (let missile in missiles) {
             if (!missiles[missile].update(elapsedTime)) {
@@ -386,6 +430,11 @@ Rocket.main = (function(input, logic, graphics, assets) {
             }
         }
         graphics.draw(myPlayer.texture, myPlayer.model.position, myPlayer.model.size, myPlayer.model.orientation, true);
+
+        for (let index in hits){
+            graphics.draw(hits[index].texture, hits[index].model.position, hits[index].model.size,
+                hits[index].model.orientation, false);
+        }
         graphics.drawShield(shield, background.viewport);
         mini.drawMini();
         mini.drawPosition(myPlayer.model.position, background.viewport, background.size);
@@ -420,6 +469,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
         graphics.createImage('upgradeWeapon.png');
         graphics.createImage('orangeCarrot.png');
         graphics.createImage('purpleCarrot.png');
+        graphics.createImage('explode.png');
         graphics.initGraphics();
 
         keyboard.registerHandler(elapsedTime => {

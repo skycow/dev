@@ -22,6 +22,8 @@ Rocket.logic.Player = function () {
     let weapon = null;
     let sprint = null;
 
+    let userId = null;
+
     Object.defineProperty(that, 'orientation', {
         get: () => orientation,
         set: (value) => { orientation = value }
@@ -70,6 +72,11 @@ Rocket.logic.Player = function () {
     Object.defineProperty(that, 'position', {
         get: () => position,
         set: value => { position = value; }
+    });
+
+    Object.defineProperty(that, 'userId', {
+        get: () => userId,
+        set: value => { userId = value; }
     });
 
     Object.defineProperty(that, 'size', {

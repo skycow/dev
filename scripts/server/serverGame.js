@@ -134,7 +134,7 @@ function update(elapsedTime, currentTime) {
                     hits.push({
                         userId: clientId,
                         missileId: activeMissiles[missile].id,
-                        position: activeUsers[clientId].userId.position,
+                        position: activeUsers[clientId].user.position,
                         signature: activeMissiles[missile].userId
                     });
                 }
@@ -277,18 +277,17 @@ function updateClients(elapsedTime) {
             let inBoundary = sameArea(client.user, activeUsers[otherId].user);
             if (otherId !== clientId && !inBoundary) {
                 activeUsers[otherId].socket.emit(NetworkIds.UPDATE_OTHER, update);
+                // Report any missile hits to this client
+
             } else if (otherId !== clientId && inBoundary === 1) {
                 activeUsers[otherId].socket.emit(NetworkIds.UPDATE_OTHER_DELETE, update);
             }
         }
-
-        for (let missile = 0; missile < missileMessages.length; missile++) {
-            client.socket.emit(NetworkIds.MISSILE_NEW, missileMessages[missile]);
-        }
-
-        // Report any missile hits to this client
         for (let hit = 0; hit < hits.length; hit++) {
             client.socket.emit(NetworkIds.MISSILE_HIT, hits[hit]);
+        }
+        for (let missile = 0; missile < missileMessages.length; missile++) {
+            client.socket.emit(NetworkIds.MISSILE_NEW, missileMessages[missile]);
         }
     }
 
@@ -405,16 +404,16 @@ function initializeSocketIO(http) {
                 // Tell existing about the newly connected player
                 client.socket.emit(NetworkIds.CONNECT_OTHER, {
                     userId: newUser.userId,
-                    position: newUser.position,
-                    view: newUser.view,
+                    // position: newUser.position,
+                    // view: newUser.view,
                     orientation: newUser.orientation,
                 });
 
                 // Tell the new player about the already connected player
                 socket.emit(NetworkIds.CONNECT_OTHER, {
                     userId: client.user.userId,
-                    position: client.user.position,
-                    view: client.user.view,
+                    // position: client.user.position,
+                    // view: client.user.view,
                     orientation: client.user.orientation,
                 });
             }
@@ -480,8 +479,9 @@ function initializeSocketIO(http) {
                 };
 
                 socket.emit(NetworkIds.CONNECT_ACK, {
-                    position: newUser.position,
-                    view: newUser.view
+                    position: newUser.myPosition,
+                    view: newUser.view,
+                    userId: newUser.userId
                 });
 
                 notifyConnect(socket, newUser);
