@@ -139,7 +139,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
                     missileNew(message.data);
                     break;
                 case NetworkIds.MISSILE_HIT:
-                    console.log('Put missile hit code here');
+                    //console.log('Put missile hit code here');
                     break;
             }
         }

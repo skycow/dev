@@ -101,5 +101,5 @@ app.use('*', function(request, response){
 
 http.listen(3000, function() {
     game_server_side.initialize(http);
-    console.log('Server running at http://localhost:3000/');
+    //console.log('Server running at http://localhost:3000/');
 });

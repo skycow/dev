@@ -354,7 +354,7 @@ function initializeSocketIO(http) {
 
     io.on('connection', function(socket){
         socket.on('join', function(data){
-            console.log(data.name + ' with id ' + socket.id + ' connected');
+            //console.log(data.name + ' with id ' + socket.id + ' connected');
             if(reconnection) {
                 if(typeof activeUsers[data.name] !== 'undefined') {
                     activeUsers[data.name].socket = socket;
@@ -400,14 +400,14 @@ function initializeSocketIO(http) {
                     clientId: socket.id,
                     message: keyInput
                 });
-                console.log(data.name + ': ' + keyInput.type);
+                //console.log(data.name + ': ' + keyInput.type);
             });
 
             socket.on('disconnect', function(){
                 // notifyDisconnect(socket.id);
                 //delete activeClients[socket.id];
                 connections--;
-                console.log(data.name + ' with id ' + socket.id + ' disconnected');
+                //console.log(data.name + ' with id ' + socket.id + ' disconnected');
                 io.emit('chat message', data.name + ' has left the game');
             });
 
