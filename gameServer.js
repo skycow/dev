@@ -99,7 +99,7 @@ app.use('*', function(request, response){
   response.status(404).send("Not found");
 })
 
-http.listen(3000, function() {
+http.listen(process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080, + process.env.IP || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0', function() {
     game_server_side.initialize(http);
     //console.log('Server running at http://localhost:3000/');
 });
