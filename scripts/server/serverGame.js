@@ -100,13 +100,6 @@ function collided(obj1, obj2) {
 //------------------------------------------------------------------
 function update(elapsedTime, currentTime) {
     gameTime = (gameTime - elapsedTime/1000);
-    gameTime = (gameTime - elapsedTime/1000);
-    gameTime = (gameTime - elapsedTime/1000);
-    gameTime = (gameTime - elapsedTime/1000);
-    gameTime = (gameTime - elapsedTime/1000);
-    gameTime = (gameTime - elapsedTime/1000);
-    gameTime = (gameTime - elapsedTime/1000);
-    gameTime = (gameTime - elapsedTime/1000);
     if(gameTime < 0) {
         gameTime = 10*60;
     }
