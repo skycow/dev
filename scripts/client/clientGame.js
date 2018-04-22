@@ -14,8 +14,17 @@ Rocket.main = (function(input, logic, graphics, assets) {
         missiles = {},
         hits = [],
         gameTime = 10 * 60, //seconds
-        shield = {x:0,y:0,radius:0};
-        pickups = [];
+        shield = {x:0,y:0,radius:0},
+        pickups = [],
+        worldParams = {
+            height: 5,
+            width: 5
+        },
+        Trees = {
+            num: 8
+        },
+        treeArray = [],
+        treeIndex = [ [1, .5], [.5, 2.75], [1.5, 4.5], [2.3, 2.5], [2.5, 2.3], [3.25, 2], [4.5, 2.5], [3.5, 4]];
 
     function network() {
         socketIO.on(NetworkIds.CONNECT_ACK, data => {
@@ -83,38 +92,63 @@ Rocket.main = (function(input, logic, graphics, assets) {
     }
 
     function playerHits(data) {
-        console.log('hits');
         let position = drawObjects(data.position);
-        console.log(data.position);
-        console.log(position);
         delete missiles[data.missileId];
         if (position){
             hits.push({
-                texture: 'explode.png',
-                life: 500,
-                model: {
-                    position: position,
-                    orientation: 0,
-                    size: {
-                        width: .03,
-                        height: .03
-                    }
-                }
-            })
+                particle: logic.ParticleSystem({
+                    position: {
+                        x: data.position.x,
+                        y: data.position.y
+                    },
+                    size: .0075,
+                    speed: .2,
+                    lifetime: 200,
+                    fill: 'rgba(255, 0, 0, 0.5)',
+                    direction: data.direction - Math.PI,
+                    theta: Math.PI/4
+                }, graphics),
+                life: 200
+            });
         }
         if (data.userId === myPlayer.model.userId) {
             hits.push({
-                texture: 'explode.png',
-                life: 500,
-                model: {
-                    position: myPlayer.model.position,
-                    orientation: 0,
-                    size: {
-                        width: .03,
-                        height: .03
-                    }
-                }
-            })
+                particle: logic.ParticleSystem({
+                    position: {
+                        x: data.position.x,
+                        y: data.position.y
+                    },
+                    size: .005,
+                    speed: .2,
+                    lifetime: 200,
+                    fill: 'rgba(255, 0, 0, 0.5)',
+                    direction: data.direction - Math.PI,
+                    theta: Math.PI/4
+                }, graphics),
+                life: 200
+            });
+        }
+    }
+
+    function objectHits(data) {
+        let position = drawObjects(data.position, true);
+        delete missiles[data.missileId];
+        if (position){
+            hits.push({
+                particle: logic.ParticleSystem({
+                    position: {
+                        x: data.position.x,
+                        y: data.position.y
+                    },
+                    size: .005,
+                    speed: .15,
+                    lifetime: 400,
+                    fill: 'rgba(0, 0, 0, 0.5)',
+                    direction: data.direction - Math.PI,
+                    theta: Math.PI
+                }, graphics),
+                life: 500
+            });
         }
     }
 
@@ -141,7 +175,8 @@ Rocket.main = (function(input, logic, graphics, assets) {
                 speed: data.speed/4,
                 lifetime: 300,
                 fill: 'rgba(0, 255, 0, 0.5)',
-                direction: data.direction - Math.PI
+                direction: data.direction - Math.PI,
+                theta: (Math.PI/4)
             }, graphics);
         }
     }
@@ -177,7 +212,11 @@ Rocket.main = (function(input, logic, graphics, assets) {
                     missileNew(message.data);
                     break;
                 case NetworkIds.MISSILE_HIT:
-                    playerHits(message.data);
+                    if (!message.data.hitPlayer) {
+                        objectHits(message.data);
+                    } else {
+                        playerHits(message.data);
+                    }
                     break;
             }
         }
@@ -257,6 +296,8 @@ Rocket.main = (function(input, logic, graphics, assets) {
         myPlayer.model.userId = data.userId;
         myPlayer.model.position.x = data.position.x;
         myPlayer.model.position.y = data.position.y;
+        myPlayer.model.projected.x = data.position.x;
+        myPlayer.model.projected.y = data.position.y;
         background.setViewport(data.view.left, data.view.top);
     }
 
@@ -317,14 +358,62 @@ Rocket.main = (function(input, logic, graphics, assets) {
             vector = { x: 0, y: y };
             background.move(vector);
         }
-
         position.x = newCenter.x;
         position.y = newCenter.y;
     }
 
+    function collided(obj1, obj2) {
+        let position = obj1.position;
+        if (obj1.hasOwnProperty('type') && obj1.type === 'tree') {
+            position = {
+                x: obj1.position.x, y: obj1.position.y + obj1.radius
+            }
+        }
+        let distance = Math.sqrt(Math.pow(position.x - obj2.position.x, 2) + Math.pow(position.y - obj2.position.y, 2));
+        let radii = obj1.radius + obj2.radius;
+
+        return distance <= radii;
+    }
+
+    function obstacle(){
+        let newCenter = {
+            position: {
+                x: myPlayer.model.projected.x,
+                y: myPlayer.model.projected.y
+            },
+            radius: myPlayer.model.radius
+        };
+
+        for (let index in treeArray){
+            let position = drawObjects(treeArray[index].model.position, true);
+            if (position.hasOwnProperty('x')) {
+                let treePosition = {
+                    position: {
+                        x: position.x,
+                        y: position.y
+                    },
+                    radius: treeArray[index].model.radius,
+                    type: 'tree'
+                };
+
+                if (collided(treePosition, newCenter)) {
+                    let deltaX = myPlayer.model.position.x - treePosition.position.x;
+                    let deltaY = (treePosition.position.y + treePosition.radius) - myPlayer.model.position.y;
+                    let objDir = Math.atan2(deltaY, deltaX);
+                    let vectorX = Math.cos(objDir) * (treePosition.radius + myPlayer.model.radius);
+                    let vectorY = Math.sin(objDir) * (treePosition.radius + myPlayer.model.radius);
+
+                    newCenter.position.x = treePosition.position.x + vectorX;
+                    newCenter.position.y = (treePosition.position.y + treePosition.radius) - vectorY;
+                }
+            }
+        }
+        return newCenter.position;
+    }
+
     function gameClock(gameTime) {
-        gameSeconds = Math.floor(gameTime%60);
-        gameMinutes = Math.floor(gameTime/60).toString();
+        let gameSeconds = Math.floor(gameTime%60);
+        let gameMinutes = Math.floor(gameTime/60).toString();
         if ( gameSeconds < 10){
             gameSeconds = '0'+gameSeconds.toString();
         }
@@ -333,12 +422,15 @@ Rocket.main = (function(input, logic, graphics, assets) {
 
     function update(elapsedTime){
         updateMsgs();
+        shiftView(myPlayer.model.position, elapsedTime);
+        myPlayer.model.projected = myPlayer.model.position;
         for (let index in otherUsers){
             otherUsers[index].model.update(elapsedTime);
         }
 
         for (let index in hits){
             hits[index].life -= elapsedTime;
+            hits[index].particle.update(elapsedTime);
             if (hits[index].life < 0) {
                 hits.splice(index, 1);
             }
@@ -357,15 +449,14 @@ Rocket.main = (function(input, logic, graphics, assets) {
         for (let missile = 0; missile < removeMissiles.length; missile++) {
             delete missiles[removeMissiles[missile].id];
         }
-
-        shiftView(myPlayer.model.position, elapsedTime);
     }
 
     function processInput(elapsedTime){
         keyboard.update(elapsedTime);
+        myPlayer.model.position = obstacle();
     }
 
-    function drawObjects(object){
+    function drawObjects(object, FOVIndifferent){
         if (object.x - background.viewport.left < 1 &&
             object.y - background.viewport.top < 1 &&
             object.x - background.viewport.left > 0 &&
@@ -374,6 +465,9 @@ Rocket.main = (function(input, logic, graphics, assets) {
                 y: object.y - background.viewport.top,
                 x: object.x - background.viewport.left
             };
+            if (FOVIndifferent !== undefined) {
+                return position;
+            }
             let deltaX = position.x - myPlayer.model.position.x;
             let deltaY = position.y - myPlayer.model.position.y;
             let objDir = Math.atan2(deltaY,deltaX);
@@ -430,10 +524,15 @@ Rocket.main = (function(input, logic, graphics, assets) {
             }
         }
         graphics.draw(myPlayer.texture, myPlayer.model.position, myPlayer.model.size, myPlayer.model.orientation, true);
-
+        for (let tree in treeArray){
+            let position = drawObjects(treeArray[tree].model.position, true);
+            if (position.hasOwnProperty('x')){
+                graphics.draw(treeArray[tree].texture, position,
+                    treeArray[tree].model.size, treeArray[tree].model.orientation, false)
+            }
+        }
         for (let index in hits){
-            graphics.draw(hits[index].texture, hits[index].model.position, hits[index].model.size,
-                hits[index].model.orientation, false);
+            hits[index].particle.render(background.viewport);
         }
         graphics.drawShield(shield, background.viewport);
         mini.drawMini();
@@ -453,11 +552,37 @@ Rocket.main = (function(input, logic, graphics, assets) {
         requestAnimationFrame(gameLoop);
     };
 
+    function makeTrees() {
+        for (let i = 0; i < Trees.num; i++){
+            treeArray.push( {
+                model: {
+                    position : {
+                        x: treeIndex[i][0],
+                        y: treeIndex[i][1]
+                    },
+                    size: {
+                        height: .4,
+                        width: .2
+                    },
+                    radius: .1,
+                    orientation: 0,
+                    type: 'tree'
+                },
+                texture: 'trees.png',
+                id: i+1
+            });
+        }
+    }
+
+    function createObstacles() {
+        makeTrees();
+    }
+
     function init(socket, userId) {
         socketIO = socket;
         background = graphics.TiledImage({
             pixel: { width: assets['background'].width, height: assets['background'].height },
-            size: { width: 5, height: 5 },
+            size: { width: worldParams.width, height: worldParams.height },
             tileSize: assets['background'].tileSize,
             assetKey: 'background'
         });
@@ -470,7 +595,10 @@ Rocket.main = (function(input, logic, graphics, assets) {
         graphics.createImage('orangeCarrot.png');
         graphics.createImage('purpleCarrot.png');
         graphics.createImage('explode.png');
+        graphics.createImage('trees.png');
+
         graphics.initGraphics();
+        createObstacles();
 
         keyboard.registerHandler(elapsedTime => {
                 let message = {

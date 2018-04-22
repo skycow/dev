@@ -6,14 +6,20 @@ Rocket.logic.Player = function () {
         y: 0.5
     };
 
+    let projected = {
+        x: 0.5,
+        y: 0.5
+    };
+
     let size = {
         width: 0.05,
         height: 0.05
     };
 
+    let radius = .025;
     let orientation = 0;
     let rotateRate = Math.PI;
-    let speed = .3;
+    let speed = .2;
     let flipped = true;
 
     let ammo = 0;
@@ -34,6 +40,10 @@ Rocket.logic.Player = function () {
         set: value => { speed = value; }
     });
 
+    Object.defineProperty(that, 'projected', {
+        get: () => projected,
+        set: value => { projected = value; }
+    });
 
     Object.defineProperty(that, 'sprint', {
         get: () => sprint,
@@ -83,20 +93,24 @@ Rocket.logic.Player = function () {
         get: () => size
     });
 
+    Object.defineProperty(that, 'radius', {
+        get: () => radius
+    });
+
     that.moveUp = function(elapsedTime) {
-        position.y -= speed * (elapsedTime / 1000);
+        projected.y -= speed * (elapsedTime / 1000);
     };
 
     that.moveDown = function(elapsedTime) {
-        position.y += speed * (elapsedTime / 1000);
+        projected.y += speed * (elapsedTime / 1000);
     };
 
     that.moveLeft = function(elapsedTime) {
-        position.x -= speed * (elapsedTime / 1000);
+        projected.x -= speed * (elapsedTime / 1000);
     };
 
     that.moveRight = function(elapsedTime) {
-        position.x += speed * (elapsedTime / 1000);
+        projected.x += speed * (elapsedTime / 1000);
     };
 
     that.rotateRight = function(elapsedTime) {
@@ -297,7 +311,7 @@ Rocket.logic.ParticleSystem = function(spec, graphics) {
             var plusOrMinus = Math.random() < 0.5 ? -1 : 1;
             let p = {
                 position: { x: position.x, y: position.y },
-                direction: spec.direction + (Math.random() * (Math.PI/4) * plusOrMinus),
+                direction: spec.direction + (Math.random() * spec.theta * plusOrMinus),
                 speed: spec.speed,	// pixels per millisecond
                 rotation: 0,
                 lifetime: Math.random()*spec.lifetime,	// milliseconds

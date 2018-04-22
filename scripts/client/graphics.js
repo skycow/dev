@@ -129,9 +129,6 @@ Rocket.graphics = (function() {
     //
     //------------------------------------------------------------------
     function rotateCanvas(center, rotation) {
-        // context.translate(center.x * canvas.width, center.y * canvas.height);
-        // context.rotate(rotation);
-        // context.translate(-center.x * canvas.width, -center.y * canvas.height);
         context.translate(center.x * world.size + world.left, center.y * world.size + world.top);
         context.rotate(rotation);
         context.translate(-(center.x * world.size + world.left), -(center.y * world.size + world.top));
@@ -145,18 +142,6 @@ Rocket.graphics = (function() {
     function draw(texture, center, size, orientation, me) {
         context.save();
 
-        let localCenter = {
-            x: center.x * canvas.width,
-            // x: center.x ,
-            y: center.y * canvas.height
-            // y: center.y
-        };
-
-        let localSize = {
-            width: size.width * canvas.width,
-            height: size.height * canvas.height
-        };
-
         rotateCanvas(center, orientation);
         // console.log(texture);
 
@@ -164,19 +149,10 @@ Rocket.graphics = (function() {
             Math.floor((center.x - size.width / 2) * world.size + world.left),
             Math.floor((center.y - size.height / 2) * world.size + world.top),
             Math.ceil(size.width * world.size), Math.ceil(size.height * world.size));
-            // localCenter.x - localSize.width / 2,
-            // localCenter.y - localSize.height / 2,
-            // localSize.width,
-            // localSize.height);
-        // sprite.center.x - sprite.width / 2,		// Where to draw the sprite
-        // sprite.center.y - sprite.height / 2,
-        //     sprite.width, sprite.height
 
         if (me){
             context.globalAlpha = .15;
             context.beginPath();
-            // context.moveTo(Math.floor((center.x - size.width / 2) * world.size + world.left) + (size.width * world.size/2),
-            //     Math.floor((center.y - size.height / 2) * world.size + world.top) + (size.width * world.size/2));
             context.arc(Math.floor((center.x - size.width / 2) * world.size + world.left) + (size.width * world.size/2),
                 Math.floor((center.y - size.height / 2) * world.size + world.top) + (size.width * world.size/2),
                 world.size*(.943), Math.PI*(13/8), Math.PI*(3/8), true);
@@ -320,14 +296,6 @@ Rocket.graphics = (function() {
         context.lineWidth = 2;
         context.stroke();
         restoreContext();
-        // context.beginPath();
-
-        // context.arc(Math.floor(center.x * world.size + world.left),
-        //     Math.floor(center.y * world.size + world.top),
-        //     2 * radius * world.size, 2 * Math.PI, false);
-        // context.closePath();
-        // context.fillStyle = color;
-        // context.fill();
     }
 
     function drawRectangle(position, size, rotation, fill, stroke) {

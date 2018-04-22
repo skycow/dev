@@ -6,7 +6,6 @@ Rocket.assets.init = function () {
     }];
 
     function createImage(tileKey, location) {
-        //console.log(tileKey)
         Rocket.assets[tileKey] = {
             image: new Image(),
             key: tileKey,
