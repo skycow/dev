@@ -424,9 +424,9 @@ Rocket.main = (function(input, logic, graphics, assets) {
             }
         }
         for (let pickup in pickups){
-            let position = drawObjects(pickups[pickup]);
+            let position = drawObjects(pickups[pickup].position);
             if (position.hasOwnProperty('x')){
-                graphics.draw(pickups[pickup].texture, position, {width:0.025,height:0.025},0,false);
+                graphics.draw(pickups[pickup].texture, position, {width: pickups[pickup].width,height: pickups[pickup].height},0,false);
             }
         }
         graphics.draw(myPlayer.texture, myPlayer.model.position, myPlayer.model.size, myPlayer.model.orientation, true);
