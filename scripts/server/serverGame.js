@@ -100,6 +100,13 @@ function collided(obj1, obj2) {
 //------------------------------------------------------------------
 function update(elapsedTime, currentTime) {
     gameTime = (gameTime - elapsedTime/1000);
+    gameTime = (gameTime - elapsedTime/1000);
+    gameTime = (gameTime - elapsedTime/1000);
+    gameTime = (gameTime - elapsedTime/1000);
+    gameTime = (gameTime - elapsedTime/1000);
+    gameTime = (gameTime - elapsedTime/1000);
+    gameTime = (gameTime - elapsedTime/1000);
+    gameTime = (gameTime - elapsedTime/1000);
     if(gameTime < 0) {
         gameTime = 10*60;
     }
@@ -148,7 +155,7 @@ function update(elapsedTime, currentTime) {
                     if(activeUsers[clientId].user.inventory.health < 0){
                         console.log("You Are Dead!");
                     }
-                    
+
                 }
             }
         }
@@ -162,7 +169,7 @@ function update(elapsedTime, currentTime) {
 
    // Check if player has picked up items
     for (let clientId in activeUsers) {
-        let keepPickups = [];   // 
+        let keepPickups = [];   //
         let localPickups = pickups.row[Math.floor(activeUsers[clientId].user.worldView.y)].col[Math.floor(activeUsers[clientId].user.worldView.x)];
             for (let pickup in localPickups) {
                 let hit = false;

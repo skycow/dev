@@ -297,7 +297,7 @@ Rocket.logic.ParticleSystem = function(spec, graphics) {
             var plusOrMinus = Math.random() < 0.5 ? -1 : 1;
             let p = {
                 position: { x: position.x, y: position.y },
-                direction: spec.direction + (Math.random() * (Math.PI/4) * plusOrMinus),
+                direction: spec.direction + (Math.random() * (Math.PI) * plusOrMinus),
                 speed: spec.speed,	// pixels per millisecond
                 rotation: 0,
                 lifetime: Math.random()*spec.lifetime,	// milliseconds
