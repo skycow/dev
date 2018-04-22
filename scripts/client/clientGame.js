@@ -31,19 +31,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
                 theta: Math.PI
                 }, graphics)
             )
-        }
-
-        myPlayer.particle = logic.ParticleSystem({
-        position: {
-            x: myPlayer.model.position.x,
-            y: myPlayer.model.position.y
-        },
-        size: .005,
-        speed: myPlayer.model.speed/8,
-        lifetime: 1600,
-        fill: 'rgba(0, 0, 255, 0.5)',
-        direction: /*myPlayer.orientation -*/ Math.PI - Math.PI
-    }, graphics);
+        }       
 
     function network() {
         socketIO.on(NetworkIds.CONNECT_ACK, data => {
@@ -383,11 +371,6 @@ Rocket.main = (function(input, logic, graphics, assets) {
             }
         }
 
-        if (myPlayer.particle) {
-            myPlayer.particle.setPosition(myPlayer.model.position.x +background.viewport.left, myPlayer.model.position.y + background.viewport.top);
-            myPlayer.particle.update(elapsedTime);
-        }
-
         for(let a = 0; a < shield.particles.length; a++) {
             shield.particles[a].setPosition(shield.x+ Math.cos(a*((2*Math.PI)/360))*shield.radius,shield.y+ Math.sin(a*((2*Math.PI)/360))*shield.radius);
             shield.particles[a].update(elapsedTime);
@@ -445,21 +428,6 @@ Rocket.main = (function(input, logic, graphics, assets) {
         graphics.clear();
         background.render();
 
-
-        // let tempparticle = logic.ParticleSystem({
-        //     position: {
-        //         x: 0.5,
-        //         y: 0.5
-        //     },
-        //     size: .005,
-        //     speed: 1/4,
-        //     lifetime: 300,
-        //     fill: 'rgba(0, 255, 0, 0.5)',
-        //     direction: 0 - Math.PI
-        // }, graphics)
-
-        // tempparticle.render(background.viewport);
-
         for (let index in otherUsers){
             let object = otherUsers[index].model.state.position;
             if (!object.hasOwnProperty('x')) continue;
@@ -485,12 +453,6 @@ Rocket.main = (function(input, logic, graphics, assets) {
             }
         }
         graphics.draw(myPlayer.texture, myPlayer.model.position, myPlayer.model.size, myPlayer.model.orientation, true);
-
-        if (myPlayer.particle){
-            myPlayer.particle.render(background.viewport);
-        }
-
-
 
         for (let index in hits){
             graphics.draw(hits[index].texture, hits[index].model.position, hits[index].model.size,
