@@ -197,7 +197,7 @@ function update(elapsedTime, currentTime) {
                     if(activeUsers[clientId].user.inventory.health < 0){
                         console.log("You Are Dead!");
                     }
-                    
+
                 }
             }
         }
@@ -224,7 +224,7 @@ function update(elapsedTime, currentTime) {
 
    // Check if player has picked up items
     for (let clientId in activeUsers) {
-        let keepPickups = [];   // 
+        let keepPickups = [];   //
         let localPickups = pickups.row[Math.floor(activeUsers[clientId].user.worldView.y)].col[Math.floor(activeUsers[clientId].user.worldView.x)];
             for (let pickup in localPickups) {
                 let hit = false;

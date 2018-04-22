@@ -14,7 +14,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
         missiles = {},
         hits = [],
         gameTime = 10 * 60, //seconds
-        shield = {x:0,y:0,radius:0},
+        shield = {x:0,y:0,radius:0,particles:[]},
         pickups = [],
         worldParams = {
             height: 5,
@@ -25,6 +25,22 @@ Rocket.main = (function(input, logic, graphics, assets) {
         },
         treeArray = [],
         treeIndex = [ [1, .5], [.5, 2.75], [1.5, 4.5], [2.3, 2.5], [2.5, 2.3], [3.25, 2], [4.5, 2.5], [3.5, 4]];
+
+        for(let a = 0; a < 2*Math.PI; a+=((2*Math.PI)/360)) {
+            shield.particles.push(logic.ParticleSystem({
+                position: {
+                    x: shield.x + Math.cos(a)*shield.radius,
+                    y: shield.y + Math.sin(a)*shield.radius
+                },
+                size: .005,
+                speed: .05,
+                lifetime: 1500,
+                fill: 'rgba(0, 0, 255, 0.5)',
+                direction: 0,
+                theta: Math.PI
+                }, graphics)
+            )
+        }       
 
     function network() {
         socketIO.on(NetworkIds.CONNECT_ACK, data => {
@@ -239,6 +255,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
             myPlayer.model.sprint = data.sprint;
         }
         gameTime = data.gameTime;
+        data.shield.particles = shield.particles;
         shield = data.shield;
         pickups = data.pickups;
     }
@@ -446,6 +463,11 @@ Rocket.main = (function(input, logic, graphics, assets) {
             }
         }
 
+        for(let a = 0; a < shield.particles.length; a++) {
+            shield.particles[a].setPosition(shield.x+ Math.cos(a*((2*Math.PI)/360))*shield.radius,shield.y+ Math.sin(a*((2*Math.PI)/360))*shield.radius);
+            shield.particles[a].update(elapsedTime);
+        }
+
         for (let missile = 0; missile < removeMissiles.length; missile++) {
             delete missiles[removeMissiles[missile].id];
         }
@@ -499,6 +521,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
     function render(){
         graphics.clear();
         background.render();
+
         for (let index in otherUsers){
             let object = otherUsers[index].model.state.position;
             if (!object.hasOwnProperty('x')) continue;
@@ -535,6 +558,11 @@ Rocket.main = (function(input, logic, graphics, assets) {
             hits[index].particle.render(background.viewport);
         }
         graphics.drawShield(shield, background.viewport);
+
+        for (particle in shield.particles) {
+            shield.particles[particle].render(background.viewport)
+        }
+
         mini.drawMini();
         mini.drawPosition(myPlayer.model.position, background.viewport, background.size);
         mini.drawShield(shield, background.viewport, background.size);
