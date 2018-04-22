@@ -15,6 +15,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
         hits = [],
         gameTime = 10 * 60, //seconds
         shield = {x:0,y:0,radius:0},
+        pickups = [],
         worldParams = {
             height: 5,
             width: 5
@@ -239,6 +240,7 @@ Rocket.main = (function(input, logic, graphics, assets) {
         }
         gameTime = data.gameTime;
         shield = data.shield;
+        pickups = data.pickups;
     }
 
     function connectPlayerOther(data) {
@@ -410,8 +412,8 @@ Rocket.main = (function(input, logic, graphics, assets) {
     }
 
     function gameClock(gameTime) {
-        gameSeconds = Math.floor(gameTime%60);
-        gameMinutes = Math.floor(gameTime/60).toString();
+        let gameSeconds = Math.floor(gameTime%60);
+        let gameMinutes = Math.floor(gameTime/60).toString();
         if ( gameSeconds < 10){
             gameSeconds = '0'+gameSeconds.toString();
         }
@@ -515,6 +517,12 @@ Rocket.main = (function(input, logic, graphics, assets) {
                 }
             }
         }
+        for (let pickup in pickups){
+            let position = drawObjects(pickups[pickup].position);
+            if (position.hasOwnProperty('x')){
+                graphics.draw(pickups[pickup].texture, position, {width: pickups[pickup].width,height: pickups[pickup].height},0,false);
+            }
+        }
         graphics.draw(myPlayer.texture, myPlayer.model.position, myPlayer.model.size, myPlayer.model.orientation, true);
         for (let tree in treeArray){
             let position = drawObjects(treeArray[tree].model.position, true);
@@ -581,6 +589,11 @@ Rocket.main = (function(input, logic, graphics, assets) {
 
         background.setViewport(0.00, 0.00);
         graphics.createImage(myPlayer.texture);
+        graphics.createImage('carrot.png');
+        graphics.createImage('bazooka1.png');
+        graphics.createImage('upgradeWeapon.png');
+        graphics.createImage('orangeCarrot.png');
+        graphics.createImage('purpleCarrot.png');
         graphics.createImage('explode.png');
         graphics.createImage('trees.png');
 

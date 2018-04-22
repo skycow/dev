@@ -23,11 +23,13 @@ let nextMissileId = 1;
 let gameTime = 10 * 60; //seconds
 let shield = {};
 let trees;
+let pickups = {};
 
 function createMissile(userId, user) {
     let missile = Missile.create({
         id: nextMissileId++,
         userId: userId,
+        missileType: user.inventory.weapon,
         position: {
             x: user.worldView.x,
             y: user.worldView.y
@@ -185,6 +187,17 @@ function update(elapsedTime, currentTime) {
                         hitPlayer: true,
                         direction: activeMissiles[missile].direction
                     });
+
+                    if(activeMissiles[missile].missileType < 1){
+                        activeUsers[clientId].user.inventory.health -= 5;
+                    }else{
+                        activeUsers[clientId].user.inventory.health -= 10;
+                    }
+
+                    if(activeUsers[clientId].user.inventory.health < 0){
+                        console.log("You Are Dead!");
+                    }
+                    
                 }
             }
         }
@@ -206,6 +219,52 @@ function update(elapsedTime, currentTime) {
         }
     }
     activeMissiles = keepMissiles;
+
+
+
+   // Check if player has picked up items
+    for (let clientId in activeUsers) {
+        let keepPickups = [];   // 
+        let localPickups = pickups.row[Math.floor(activeUsers[clientId].user.worldView.y)].col[Math.floor(activeUsers[clientId].user.worldView.x)];
+            for (let pickup in localPickups) {
+                let hit = false;
+                if (collided(localPickups[pickup], activeUsers[clientId].user)) {
+                    hit = true;
+
+                    switch (localPickups[pickup].type) {
+                        case "ammo":
+                            activeUsers[clientId].user.inventory.ammo += 5;
+                            break;
+                        case "health":
+                            if(activeUsers[clientId].user.inventory.health < 100){
+                                activeUsers[clientId].user.inventory.health = (activeUsers[clientId].user.inventory.health + 10) % 101;
+                            }else{
+                                hit = false;
+                            }
+                            break;
+                        case "weapon":
+                            if(activeUsers[clientId].user.inventory.weapon < 0){
+                                activeUsers[clientId].user.inventory.weapon = 0;
+                            }else{
+                                hit = false;
+                            }
+                            break;
+                        case "upgrade":
+                            if(activeUsers[clientId].user.inventory.weapon < 1 && activeUsers[clientId].user.inventory.weapon > -1){
+                                activeUsers[clientId].user.inventory.weapon = 1;
+                            }else{
+                                hit = false;
+                            }
+                            break;
+                    }
+
+                }
+                if (!hit) {
+                    keepPickups.push(localPickups[pickup]);
+                }
+            }
+            pickups.row[Math.floor(activeUsers[clientId].user.worldView.y)].col[Math.floor(activeUsers[clientId].user.worldView.x)] = keepPickups;
+    }
 }
 
 function sameArea(object1, object2){
@@ -217,6 +276,72 @@ function sameArea(object1, object2){
         return 1;
     }
     return 2;
+}
+
+function getLocalWeapons(client) {
+    let posx = client.user.worldView.x;
+    let posy = client.user.worldView.y;
+    let localWeapons = pickups
+    .row[Math.floor(client.user.worldView.y)]
+    .col[Math.floor(client.user.worldView.x)];
+
+    if(posx >= 1) {
+        localWeapons = localWeapons.concat(
+            pickups
+            .row[Math.floor(client.user.worldView.y)]
+            .col[Math.floor(client.user.worldView.x-1)]
+        )
+        if(posy >= 1) {
+            localWeapons = localWeapons.concat(
+                pickups
+                .row[Math.floor(client.user.worldView.y-1)]
+                .col[Math.floor(client.user.worldView.x-1)]
+            )
+        }
+        if(posy <= 4) {
+            localWeapons = localWeapons.concat(
+                pickups
+                .row[Math.floor(client.user.worldView.y+1)]
+                .col[Math.floor(client.user.worldView.x-1)]
+            )
+        }
+    }
+    if(posx <= 4) {
+        localWeapons = localWeapons.concat(
+            pickups
+            .row[Math.floor(client.user.worldView.y)]
+            .col[Math.floor(client.user.worldView.x+1)]
+        )
+        if(posy >= 1) {
+            localWeapons = localWeapons.concat(
+                pickups
+                .row[Math.floor(client.user.worldView.y-1)]
+                .col[Math.floor(client.user.worldView.x+1)]
+            )
+        }
+        if(posy <= 4) {
+            localWeapons = localWeapons.concat(
+                pickups
+                .row[Math.floor(client.user.worldView.y+1)]
+                .col[Math.floor(client.user.worldView.x+1)]
+            )
+        }
+    }
+    if(posy >= 1) {
+        localWeapons = localWeapons.concat(
+            pickups
+            .row[Math.floor(client.user.worldView.y-1)]
+            .col[Math.floor(client.user.worldView.x)]
+        )
+    }
+    if(posy <= 4) {
+        localWeapons = localWeapons.concat(
+            pickups
+            .row[Math.floor(client.user.worldView.y+1)]
+            .col[Math.floor(client.user.worldView.x)]
+        )
+    }
+    return localWeapons;
 }
 
 function updateClients(elapsedTime) {
@@ -263,6 +388,7 @@ function updateClients(elapsedTime) {
             shield: shield
         };
         if (client.user.reportUpdate) {
+            update.pickups = getLocalWeapons(client);
             client.socket.emit(NetworkIds.UPDATE_SELF, update);
             client.user.reportUpdate = false;
         }
@@ -297,6 +423,48 @@ function initializeShield() {
     shield.x = Math.random() * 3 + 1;
     shield.y = Math.random() * 3 + 1;
     shield.radius = Math.sqrt(32);
+}
+
+function initializePickups() {
+    pickups.row = [];
+    for(let r = 0; r < 5; r++) {
+        pickups.row.push({col:[]})
+        for(let c = 0; c < 5; c++) {
+            pickups.row[r].col.push([]);
+        }
+    }
+
+    for (let i = 0; i < 50; i++) {
+        let tempx = Math.random() * (5-2/3) + 1/3;
+        let tempy = Math.random() * (5-2/3) + 1/3;
+        let tempPosition = {x: tempx, y: tempy};
+        pickups.row[Math.floor(tempy)].col[Math.floor(tempx)].push({position: tempPosition, texture:'purpleCarrot.png', type:'health', width: 0.025, height: 0.025, radius: 0.025});
+    }
+
+
+    for (let i = 0; i < 100; i++) {
+        let tempx = Math.random() * (5-2/3) + 1/3;
+        let tempy = Math.random() * (5-2/3) + 1/3;
+        let tempPosition = {x: tempx, y: tempy};
+        pickups.row[Math.floor(tempy)].col[Math.floor(tempx)].push({position: tempPosition, texture:'orangeCarrot.png', type:'ammo', width: 0.025, height: 0.025, radius: 0.025});
+    }
+
+
+    for (let i = 0; i < 20; i++) {
+        let tempx = Math.random() * (5-2/3) + 1/3;
+        let tempy = Math.random() * (5-2/3) + 1/3;
+        let tempPosition = {x: tempx, y: tempy};
+        pickups.row[Math.floor(tempy)].col[Math.floor(tempx)].push({position: tempPosition, texture:'bazooka1.png', type:'weapon', width: 0.075, height: 0.05, radius: 0.025});
+    }
+
+
+    for (let i = 0; i < 20; i++) {
+        let tempx = Math.random() * (5-2/3) + 1/3;
+        let tempy = Math.random() * (5-2/3) + 1/3;
+        let tempPosition = {x: tempx, y: tempy};
+        pickups.row[Math.floor(tempy)].col[Math.floor(tempx)].push({position: tempPosition, texture:'upgradeWeapon.png', type:'upgrade', width: 0.075, height: 0.05, radius: 0.025});
+    }
+
 }
 
 //------------------------------------------------------------------
@@ -360,16 +528,12 @@ function initializeSocketIO(http) {
                 // Tell existing about the newly connected player
                 client.socket.emit(NetworkIds.CONNECT_OTHER, {
                     userId: newUser.userId,
-                    // position: newUser.position,
-                    // view: newUser.view,
                     orientation: newUser.orientation,
                 });
 
                 // Tell the new player about the already connected player
                 socket.emit(NetworkIds.CONNECT_OTHER, {
                     userId: client.user.userId,
-                    // position: client.user.position,
-                    // view: client.user.view,
                     orientation: client.user.orientation,
                 });
             }
@@ -458,7 +622,6 @@ function initializeSocketIO(http) {
                     clientId: socket.id,
                     message: keyInput
                 });
-                //console.log(data.name + ': ' + keyInput.type);
             });
 
             socket.on('disconnect', function(){
@@ -481,6 +644,7 @@ function initialize(http) {
     initializeSocketIO(http);
     initializeShield();
     createObstacles();
+    initializePickups();
     gameLoop(present(), 0);
 }
 

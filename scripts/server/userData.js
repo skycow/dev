@@ -11,6 +11,12 @@ function makePlayer() {
         top: Math.random()*4
     };
 
+    let inventory = {
+        health: 100,
+        ammo: 0,
+        weapon: -1
+    };
+
     let size = {
         width: 0.05,
         height: 0.05,
@@ -37,6 +43,10 @@ function makePlayer() {
     Object.defineProperty(that, 'reportUpdate', {
         get: () => reportUpdate,
         set: value => reportUpdate = value
+    });
+    Object.defineProperty(that, 'inventory', {
+        get: () => inventory,
+        set: value => inventory = value
     });
 
     Object.defineProperty(that, 'orientation', {
