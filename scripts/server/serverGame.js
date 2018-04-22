@@ -22,6 +22,7 @@ let inputQueue = Queue.create();
 let nextMissileId = 1;
 let gameTime = 10 * 60; //seconds
 let shield = {};
+let trees;
 
 function createMissile(userId, user) {
     let missile = Missile.create({
@@ -85,11 +86,51 @@ function processInput(elapsedTime) {
 //
 //------------------------------------------------------------------
 function collided(obj1, obj2) {
-    let distance = Math.sqrt(Math.pow(obj1.position.x - obj2.position.x, 2) + Math.pow(obj1.position.y - obj2.position.y, 2));
+    let position = obj1.position;
+    if (obj1.hasOwnProperty('type') && obj1.type === 'tree') {
+        position = {
+            x: obj1.position.x, y: obj1.position.y + obj1.radius
+        }
+    }
+    let distance = Math.sqrt(Math.pow(position.x - obj2.position.x, 2) + Math.pow(position.y - obj2.position.y, 2));
     let radii = obj1.radius + obj2.radius;
 
     return distance <= radii;
 }
+
+function obstacle(user){
+    let newCenter = {
+        position: {
+            x: user.projected.x,
+            y: user.projected.y
+        },
+        radius: user.radius
+    };
+
+    for (let index in trees.treeArray){
+        let treePosition = {
+            position: {
+                x: trees.treeArray[index].model.position.x,
+                y: trees.treeArray[index].model.position.y
+            },
+            radius: trees.treeArray[index].model.radius,
+            type: 'tree'
+        };
+
+        if (collided(treePosition, newCenter)) {
+            let deltaX = user.worldView.x - treePosition.position.x;
+            let deltaY = (treePosition.position.y + treePosition.radius) - user.worldView.y;
+            let objDir = Math.atan2(deltaY, deltaX);
+            let vectorX = Math.cos(objDir) * (treePosition.radius + user.radius);
+            let vectorY = Math.sin(objDir) * (treePosition.radius + user.radius);
+
+            newCenter.position.x = treePosition.position.x + vectorX;
+            newCenter.position.y = (treePosition.position.y + treePosition.radius) - vectorY;
+        }
+    }
+    return newCenter.position;
+}
+
 
 //------------------------------------------------------------------
 //
@@ -98,6 +139,12 @@ function collided(obj1, obj2) {
 //------------------------------------------------------------------
 function update(elapsedTime, currentTime) {
     gameTime = (gameTime - elapsedTime/1000);
+
+    for (let clientId in activeUsers) {
+        activeUsers[clientId].user.worldView = obstacle(activeUsers[clientId].user);
+        activeUsers[clientId].user.projected = activeUsers[clientId].user.worldView;
+    }
+
     if(gameTime < 0) {
         gameTime = 10*60;
     }
@@ -134,9 +181,24 @@ function update(elapsedTime, currentTime) {
                         userId: clientId,
                         missileId: activeMissiles[missile].id,
                         position: activeUsers[clientId].user.position,
-                        signature: activeMissiles[missile].userId
+                        signature: activeMissiles[missile].userId,
+                        hitPlayer: true,
+                        direction: activeMissiles[missile].direction
                     });
                 }
+            }
+        }
+        for (let index in trees.treeArray){
+            if (collided(activeMissiles[missile], trees.treeArray[index].model)) {
+                hit = true;
+                hits.push({
+                    userId: index,
+                    missileId: activeMissiles[missile].id,
+                    position: trees.treeArray[index].model.position,
+                    signature: activeMissiles[missile].userId,
+                    hitPlayer: false,
+                    direction: activeMissiles[missile].direction
+                });
             }
         }
         if (!hit) {
@@ -411,9 +473,14 @@ function initializeSocketIO(http) {
     });
 }
 
+function createObstacles() {
+    trees = User.makeTrees();
+}
+
 function initialize(http) {
     initializeSocketIO(http);
     initializeShield();
+    createObstacles();
     gameLoop(present(), 0);
 }
 

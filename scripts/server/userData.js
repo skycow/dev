@@ -16,16 +16,21 @@ function makePlayer() {
         height: 0.05,
     };
 
-    let radius = (0.05/2);
+    let radius = .025;
 
     let worldView = {
       x: position.x + view.left,
       y: position.y + view.top
     };
 
+    let projected = {
+        x: position.x + view.left,
+        y: position.y + view.top
+    };
+
     let orientation = 0;
     let rotateRate = Math.PI;
-    let speed = .3;
+    let speed = .2;
     let flipped = true;
     let reportUpdate = false;
 
@@ -54,6 +59,11 @@ function makePlayer() {
         set: value => { worldView = value; }
     });
 
+    Object.defineProperty(that, 'projected', {
+        get: () => projected,
+        set: value => { projected = value; }
+    });
+
     Object.defineProperty(that, 'myPosition', {
         get: () => position,
         set: value => { position = value; }
@@ -79,29 +89,29 @@ function makePlayer() {
 
     that.moveUp = function(elapsedTime) {
         reportUpdate = true;
-        if (worldView.y - speed * (elapsedTime / 1000) > (1/3)){
-            worldView.y -= speed * (elapsedTime / 1000);
+        if (projected.y - speed * (elapsedTime / 1000) > (1/3)){
+            projected.y -= speed * (elapsedTime / 1000);
         }
     };
 
     that.moveDown = function(elapsedTime) {
         reportUpdate = true;
-        if (worldView.y + speed * (elapsedTime / 1000) < 5 - (1/3)) {
-            worldView.y += speed * (elapsedTime / 1000);
+        if (projected.y + speed * (elapsedTime / 1000) < 5 - (1/3)){
+            projected.y += speed * (elapsedTime / 1000);
         }
     };
 
     that.moveLeft = function(elapsedTime) {
         reportUpdate = true;
-        if (worldView.x - speed * (elapsedTime / 1000) > (1/3)) {
-            worldView.x -= speed * (elapsedTime / 1000);
+        if (projected.x - speed * (elapsedTime / 1000) > (1/3)){
+            projected.x -= speed * (elapsedTime / 1000);
         }
     };
 
     that.moveRight = function(elapsedTime) {
         reportUpdate = true;
-        if (worldView.x + speed * (elapsedTime / 1000) < 5 - (1/3)) {
-            worldView.x += speed * (elapsedTime / 1000);
+        if (projected.x + speed * (elapsedTime / 1000) < 5 - (1/3)){
+            projected.x += speed * (elapsedTime / 1000);
         }
     };
 
@@ -131,4 +141,44 @@ function makePlayer() {
     return that;
 };
 
+function makeTrees(){
+
+    let that = {};
+
+    let treeArray = [],
+        treeIndex = [ [1, .5], [.5, 2.75], [1.5, 4.5], [2.3, 2.5], [2.5, 2.3], [3.25, 2], [4.5, 2.5], [3.5, 4]],
+        Trees = {
+            num: 8
+        },
+        treeSize = {
+            width: .2,
+            height: .4
+        };
+
+    for (let i = 0; i < Trees.num; i++){
+        treeArray.push( {
+            model: {
+                position : {
+                    x: treeIndex[i][0],
+                    y: treeIndex[i][1]
+                },
+                size: {
+                    height: treeSize.height,
+                    width: treeSize.width
+                },
+                radius: .1
+            },
+            id: i+1
+        });
+    }
+
+    Object.defineProperty(that, 'treeArray', {
+        get: () => treeArray,
+        set: value => { treeArray = value; }
+    });
+
+    return that;
+}
+
 module.exports.makeplayer = makePlayer;
+module.exports.makeTrees = makeTrees;
