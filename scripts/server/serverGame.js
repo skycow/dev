@@ -28,6 +28,7 @@ function createMissile(userId, user) {
     let missile = Missile.create({
         id: nextMissileId++,
         userId: userId,
+        missileType: user.inventory.weapon,
         position: {
             x: user.worldView.x,
             y: user.worldView.y
@@ -137,6 +138,17 @@ function update(elapsedTime, currentTime) {
                         position: activeUsers[clientId].user.position,
                         signature: activeMissiles[missile].userId
                     });
+
+                    if(activeMissiles[missile].missileType < 1){
+                        activeUsers[clientId].user.inventory.health -= 5;
+                    }else{
+                        activeUsers[clientId].user.inventory.health -= 10;
+                    }
+
+                    if(activeUsers[clientId].user.inventory.health < 0){
+                        console.log("You Are Dead!");
+                    }
+                    
                 }
             }
         }
@@ -145,6 +157,52 @@ function update(elapsedTime, currentTime) {
         }
     }
     activeMissiles = keepMissiles;
+
+
+
+   // Check if player has picked up items
+    for (let clientId in activeUsers) {
+        let keepPickups = [];   // 
+        let localPickups = pickups.row[Math.floor(activeUsers[clientId].user.worldView.y)].col[Math.floor(activeUsers[clientId].user.worldView.x)];
+            for (let pickup in localPickups) {
+                let hit = false;
+                if (collided(localPickups[pickup], activeUsers[clientId].user)) {
+                    hit = true;
+
+                    switch (localPickups[pickup].type) {
+                        case "ammo":
+                            activeUsers[clientId].user.inventory.ammo += 5;
+                            break;
+                        case "health":
+                            if(activeUsers[clientId].user.inventory.health < 100){
+                                activeUsers[clientId].user.inventory.health = (activeUsers[clientId].user.inventory.health + 10) % 101;
+                            }else{
+                                hit = false;
+                            }
+                            break;
+                        case "weapon":
+                            if(activeUsers[clientId].user.inventory.weapon < 0){
+                                activeUsers[clientId].user.inventory.weapon = 0;
+                            }else{
+                                hit = false;
+                            }
+                            break;
+                        case "upgrade":
+                            if(activeUsers[clientId].user.inventory.weapon < 1 && activeUsers[clientId].user.inventory.weapon > -1){
+                                activeUsers[clientId].user.inventory.weapon = 1;
+                            }else{
+                                hit = false;
+                            }
+                            break;
+                    }
+
+                }
+                if (!hit) {
+                    keepPickups.push(localPickups[pickup]);
+                }
+            }
+            pickups.row[Math.floor(activeUsers[clientId].user.worldView.y)].col[Math.floor(activeUsers[clientId].user.worldView.x)] = keepPickups;
+    }
 }
 
 function sameArea(object1, object2){
@@ -317,28 +375,32 @@ function initializePickups() {
     for (let i = 0; i < 50; i++) {
         let tempx = Math.random() * (5-2/3) + 1/3;
         let tempy = Math.random() * (5-2/3) + 1/3;
-        pickups.row[Math.floor(tempy)].col[Math.floor(tempx)].push({x:tempx,y:tempy, texture:'purpleCarrot.png', type:'health'});
+        let tempPosition = {x: tempx, y: tempy};
+        pickups.row[Math.floor(tempy)].col[Math.floor(tempx)].push({position: tempPosition, texture:'purpleCarrot.png', type:'health', width: 0.025, height: 0.025, radius: 0.025});
     }
 
 
     for (let i = 0; i < 100; i++) {
         let tempx = Math.random() * (5-2/3) + 1/3;
         let tempy = Math.random() * (5-2/3) + 1/3;
-        pickups.row[Math.floor(tempy)].col[Math.floor(tempx)].push({x:tempx,y:tempy, texture:'orangeCarrot.png', type:'ammo'});
+        let tempPosition = {x: tempx, y: tempy};
+        pickups.row[Math.floor(tempy)].col[Math.floor(tempx)].push({position: tempPosition, texture:'orangeCarrot.png', type:'ammo', width: 0.025, height: 0.025, radius: 0.025});
     }
 
 
     for (let i = 0; i < 20; i++) {
         let tempx = Math.random() * (5-2/3) + 1/3;
         let tempy = Math.random() * (5-2/3) + 1/3;
-        pickups.row[Math.floor(tempy)].col[Math.floor(tempx)].push({x:tempx,y:tempy, texture:'bazooka1.png', type:'weapon'});
+        let tempPosition = {x: tempx, y: tempy};
+        pickups.row[Math.floor(tempy)].col[Math.floor(tempx)].push({position: tempPosition, texture:'bazooka1.png', type:'weapon', width: 0.075, height: 0.05, radius: 0.025});
     }
 
 
     for (let i = 0; i < 20; i++) {
         let tempx = Math.random() * (5-2/3) + 1/3;
         let tempy = Math.random() * (5-2/3) + 1/3;
-        pickups.row[Math.floor(tempy)].col[Math.floor(tempx)].push({x:tempx,y:tempy, texture:'upgradeWeapon.png', type:'upgrade'});
+        let tempPosition = {x: tempx, y: tempy};
+        pickups.row[Math.floor(tempy)].col[Math.floor(tempx)].push({position: tempPosition, texture:'upgradeWeapon.png', type:'upgrade', width: 0.075, height: 0.05, radius: 0.025});
     }
 
 }
